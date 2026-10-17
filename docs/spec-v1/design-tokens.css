@@ -1,0 +1,88 @@
+/* Rotina ITA — Design Tokens v1.0
+   Editorial acadêmico | tema claro para o MVP
+   Use tokens semânticos nos componentes; evite cores literais espalhadas.
+*/
+:root {
+  color-scheme: light;
+
+  /* Color */
+  --rita-color-canvas: #F7F5F0;
+  --rita-color-surface: #FFFFFF;
+  --rita-color-surface-muted: #F0EEE8;
+  --rita-color-ink: #222522;
+  --rita-color-ink-muted: #686B65;
+  --rita-color-border: #DEDDD5;
+  --rita-color-accent: #A84635;
+  --rita-color-accent-hover: #873829;
+  --rita-color-accent-soft: #F3E5E0;
+  --rita-color-success: #356B50;
+  --rita-color-warning: #8A5B19;
+  --rita-color-danger: #A13D36;
+  --rita-color-info: #3D6178;
+  --rita-color-focus: #315E91;
+
+  /* Typography */
+  --rita-font-display: "Source Serif 4", Georgia, serif;
+  --rita-font-body: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --rita-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --rita-text-xs: 0.75rem;
+  --rita-text-sm: 0.875rem;
+  --rita-text-md: 1rem;
+  --rita-text-lg: 1.125rem;
+  --rita-text-xl: 1.5rem;
+  --rita-text-2xl: 2rem;
+  --rita-text-3xl: 2.5rem;
+
+  /* Spacing: 4px base */
+  --rita-space-1: 0.25rem;
+  --rita-space-2: 0.5rem;
+  --rita-space-3: 0.75rem;
+  --rita-space-4: 1rem;
+  --rita-space-6: 1.5rem;
+  --rita-space-8: 2rem;
+  --rita-space-10: 2.5rem;
+  --rita-space-12: 3rem;
+
+  /* Geometry */
+  --rita-radius-sm: 0.25rem;
+  --rita-radius-md: 0.5rem;
+  --rita-radius-lg: 0.75rem;
+  --rita-border-width: 1px;
+  --rita-content-max: 80rem;
+  --rita-sidebar-width: 15rem;
+
+  /* Motion */
+  --rita-motion-fast: 120ms;
+  --rita-motion-standard: 180ms;
+  --rita-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Focus */
+  --rita-focus-ring: 0 0 0 3px color-mix(in srgb, var(--rita-color-focus) 28%, transparent);
+}
+
+html {
+  background: var(--rita-color-canvas);
+  color: var(--rita-color-ink);
+  font-family: var(--rita-font-body);
+}
+
+h1, h2, h3, .rita-display {
+  font-family: var(--rita-font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rita-color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

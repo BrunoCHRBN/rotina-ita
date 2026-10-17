@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-page-node-id="RqLcJSkdR0C1DHMXvnVNBu">
+<head data-page-node-id="7uyCfmEEoFuW6IUpcuGlq7">
+<meta charset="UTF-8" data-page-node-id="Pukuz3C8DC8yUCyOXzcUh2" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" data-page-node-id="8gP0xetP8RF3FoHWSVFfZF" />
+<meta name="theme-color" content="#0B0F19" id="meta-tema" data-page-node-id="Y0o3CeBaG2XdwGFBPiwPH7" />
+<title>Rotina ITA — Organizador de Estudos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" data-page-node-id="WYxJTmqGfz8AtOi6t1yTSW" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin data-page-node-id="gHHSdBMXysrDkqCTUrsaYy" />
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&display=swap" rel="stylesheet" data-page-node-id="iCAel42afHkdpAOOalzBWM" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Literata', 'Georgia', 'Times New Roman', 'serif'] },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* ==========================================================================
+     ROTINA ITA — CADERNO PAUTADO
+     --------------------------------------------------------------------------
+     A tese: este não é um painel, é um caderno de estudo impresso. Três
+     consequências, e todas as decisões abaixo saem delas:
+
+     1. A ÚNICA cor da interface pertence às matérias. Não existe cor de
+        "accent" para botão, aba ou foco — chrome é tinta e régua. Seis matizes
+        já carregam informação; um sétimo só competiria com elas.
+     2. A RÉGUA carrega a estrutura; a SUPERFÍCIE é reservada ao que flutua
+        (modal, aviso, dropdown, vazio). Nada de card em tudo.
+     3. UMA serifada, uma voz. Hierarquia vem de corpo, peso e itálico — não de
+        caixa alta, de rótulo-sobrancelha nem de ponto médio.
+
+     Tipografia: Literata (variável 300–700, romano + itálico, opsz 7–72).
+     Escolhida por três razões funcionais, não estéticas: contraste de traço
+     moderado (uma didone ficaria espinhosa sobre o navy escuro), altura-x
+     grande (aguenta 11–12px) e numerais tabulares reais (as cifras alinham).
+     ========================================================================== */
+
+  :root {
+    /* --- papel e superfície --- */
+    --c-page:        #0B0F19;   /* navy profundo — fixado no brief original */
+    --c-page-a:      rgba(11, 15, 25, .94);
+    --c-leaf:        #141924;   /* superfície que flutua */
+    --c-leaf-2:      #1A2030;
+    --c-well:        #0E131D;   /* poço: campos, trilhos */
+    --c-track:       #3A455C;   /* 2,0:1 sobre a PÁGINA. Era #2C3547, que media
+                                   1,56:1 — abaixo do limiar em que um traço se
+                                   percebe como traço. O trilho é a fronteira do
+                                   objeto gráfico (1.4.11). */
+
+    /* --- réguas: o elemento ESTRUTURAL ---
+       Medido antes: `--c-rule` dava 1,49:1 sobre a página e `--c-rule-soft`,
+       1,28:1. O comentário acima dizia que as réguas eram "o elemento
+       estrutural, não um sussurro" — e o valor era o mesmo 1,49:1 que a nota do
+       interruptor (abaixo) chama de baixo demais para se distinguir do papel.
+       O princípio já estava escrito neste arquivo; faltava aplicá-lo à régua.
+       Agora: o fio de seção (que DELIMITA) vai a 3:1; o separador de linha (que
+       apenas SEPARA, e são 56 em Conteúdos) vai a 2:1 — 56 fios a 3:1 viram
+       grade de planilha e matam a leveza. A hierarquia entre os dois é
+       preservada de propósito. Medir de novo antes de trocar qualquer um. */
+    --c-rule:        #515F7E;   /* 3,0:1 sobre #0B0F19 */
+    --c-rule-soft:   #39465C;   /* 2,0:1 sobre #0B0F19 */
+
+    /* --- contorno do interruptor DESLIGADO ---
+       Com `--c-rule` o contorno dava 1,49:1 sobre a página: o interruptor
+       desligado não se distinguia do papel e parecia um controle inativo (o
+       desabilitado é `opacity:.4`). A fronteira do controle precisa de 3:1
+       (1.4.11). Desligado = contorno visível e vazio; ligado = tinta cheia. */
+    --c-sw-off:      #5A6376;   /* 3,17:1 sobre #0B0F19 */
+
+    /* --- tinta ---
+       Branco quente, não o branco-azulado de antes: sobre serifada, o azulado
+       cintila e a página fica fria. E 15,5:1 em vez de 17,5:1 — serifada com
+       contraste máximo sobre fundo escuro incomoda na leitura longa. */
+    --c-ink:         #EAE7E0;
+    --c-ink2:        #A8AFBC;
+    --c-ink3:        #7E8796;
+
+    /* --- semânticos (estados: a única cor além das matérias) --- */
+    --c-ok:          #4ADE9B;
+    --c-warn:        #E5B567;
+    --c-danger:      #F08A8A;
+
+    /* --- utilidades --- */
+    --c-hi:          rgba(255, 255, 255, .04);
+    --c-scroll:      #242C3D;
+    --c-scroll-h:    #33405A;
+
+    /* --- escala tipográfica (razão ~1,25 + degraus de chrome) --- */
+    --fs-display: 2.5rem;    /* 40 — a cifra da semana: o único momento alto */
+    --fs-h1:      1.625rem;  /* 26 — o título da tela */
+    --fs-h2:      1.125rem;  /* 18 — cabeçalho de seção */
+    --fs-num:     1.375rem;  /* 22 — cifra de destaque */
+    --fs-body:    0.9375rem; /* 15 */
+    --fs-meta:    0.8125rem; /* 13 */
+    --fs-small:   0.75rem;   /* 12 — chrome */
+    --fs-micro:   0.6875rem; /* 11 — só dica */
+
+    /* --- entrelinha: UMA por corpo ---
+       Medido antes desta passagem: 12 entrelinhas distintas para 8 corpos. A
+       causa não era a escala, eram os COMPONENTES redeclarando `line-height`
+       por cima dela — `.t-col` e `.t-field` cravavam 1.3, `.btn` 1.4, `.word`
+       não declarava nada e herdava 1.5 de um `.t-meta` acima. Resultado: 12px
+       renderizava com QUATRO entrelinhas (15,6 / 16,8 / 17,4 / 18px), e a mesma
+       caixa de 12px tinha quatro alturas diferentes conforme o lugar.
+
+       A regra: nenhum componente crava entrelinha. Todo mundo referencia o
+       token do SEU corpo. Se um controle precisa de caixa mais justa, quem
+       muda é o padding, não a entrelinha. */
+    --lh-display: 1.0;
+    --lh-h1:      1.15;
+    --lh-h2:      1.25;
+    --lh-num:     1.1;
+    --lh-body:    1.62;      /* serifada pede mais entrelinha que a sans */
+    --lh-meta:    1.5;
+    --lh-small:   1.45;
+    --lh-hint:    1.45;
+    --measure: 62ch;         /* teto de leitura, bem abaixo dos 80ch */
+
+    /* --- largura da PÁGINA (não do texto) ---
+       Medido: com a coluna em 960px, o rótulo e o valor da MESMA linha ficavam a
+       896px um do outro (pior caso: "Meta" → "25h"). Ler a linha custava 2,2× a
+       medida de leitura que este arquivo fixou para o texto — o olho perde a
+       associação entre as duas pontas. Varredura de 960→536px de conteúdo: o vão
+       cai linearmente (896 → 472) porque o valor é alinhado à direita. Em 42rem
+       (672px de página, 608px de conteúdo) o vão máximo é 544px — dentro de uma
+       saccade. O caderno tem UMA largura: cabeçalho, índice e texto estreitam
+       juntos, e a régua de seção corre até esta margem, não até a da janela. */
+    --page: 42rem;
+
+    /* --- escala de ESPAÇO ---
+       O layout é feito com utilitárias do Tailwind, cuja escala é 4px com
+       meio-degrau de 2px. Estes tokens são o RITMO — os degraus que separam
+       blocos — e não o respiro interno de um controle.
+
+       A REGRA vale para os dois: todo espaço é múltiplo de 2px. Medido antes
+       desta passagem, havia 16 valores distintos e QUATRO fora do passo, todos
+       cravados à mão dentro de componentes: 3px (.sec-head, .nav-btn), 5px
+       (.btn-sm, .nav-btn), 7px (.btn, .inp, .nav-btn) e 13px (.btn). E o ritmo
+       de seção usava TRÊS valores para a mesma função — 36px entre seções, 28px
+       no topo da página e 32px no cartão de abertura e no aviso de sobrecarga.
+       Agora 36px é o passo entre seções, e ponto.
+
+       Antes de acrescentar um degrau, meça: se o valor não estiver nesta lista,
+       provavelmente é um controle mal dimensionado, não um degrau novo. */
+    --sp-1:  0.25rem;   /*  4 — respiro mínimo */
+    --sp-2:  0.5rem;    /*  8 — dentro de um bloco */
+    --sp-3:  0.75rem;   /* 12 — entre linhas afins */
+    --sp-4:  1rem;      /* 16 — entre sub-blocos */
+    --sp-5:  1.5rem;    /* 24 — entre blocos */
+    --sp-6:  2.25rem;   /* 36 — entre SEÇÕES: o passo do caderno */
+  }
+
+  html.claro {
+    --c-page:        #F6F7FA;
+    --c-page-a:      rgba(246, 247, 250, .94);
+    --c-leaf:        #FFFFFF;
+    --c-leaf-2:      #F1F3F8;
+    --c-well:        #F4F6FA;
+    --c-track:       #ADB1BA;   /* 2,0:1 sobre o papel claro */
+
+    --c-rule:        #8C9096;   /* 3,0:1 — era #D8DDE6, que media 1,27:1 */
+    --c-rule-soft:   #AFB1B6;   /* 2,0:1 — era #E7EAF0, que media 1,12:1.
+                                   Derivados da cor ORIGINAL por escala em
+                                   espaço linear: mantêm o matiz azulado do
+                                   papel (#F6F7FA). Escalar em sRGB dessatura e
+                                   a régua vira um cinza frio, alheio ao papel. */
+
+    --c-sw-off:      #858C99;   /* 3,16:1 sobre #F6F7FA */
+
+    --c-ink:         #14161C;
+    --c-ink2:        #4E5563;  /* 6,9:1 sobre o poço #F4F6FA */
+    --c-ink3:        #636A78;  /* 5,0:1 — era #767D8B, dava 3,86:1 e reprovava
+                                  em TODO texto de apoio (11px) e rótulo de
+                                  coluna. Texto pequeno não tem isenção. */
+
+    --c-ok:          #047857;
+    --c-warn:        #92400E;
+    --c-danger:      #B91C1C;
+
+    --c-hi:          rgba(255, 255, 255, 0);
+    --c-scroll:      #D7DCE6;
+    --c-scroll-h:    #BFC7D6;
+  }
+
+  /* --------------------------------------------------------------------------
+     BASE
+     -------------------------------------------------------------------------- */
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: Literata, Georgia, 'Times New Roman', serif;
+    font-optical-sizing: auto;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    background: var(--c-page);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--c-page); }
+  ::-webkit-scrollbar-thumb { background: var(--c-scroll); border-radius: 999px; border: 2px solid var(--c-page); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--c-scroll-h); }
+  ::selection { background: var(--c-rule); color: var(--c-ink); }
+
+  /* foco de teclado: a tinta, não uma cor de marca */
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; border-radius: 3px; }
+
+  /* --------------------------------------------------------------------------
+     TIPOGRAFIA — uma família, hierarquia por corpo/peso/estilo
+     -------------------------------------------------------------------------- */
+  .t-display { font-size: var(--fs-display); line-height: var(--lh-display); font-weight: 500; letter-spacing: -.015em; }
+  .t-h1      { font-size: var(--fs-h1);      line-height: var(--lh-h1);      font-weight: 500; letter-spacing: -.01em; }
+  .t-h2      { font-size: var(--fs-h2);      line-height: var(--lh-h2);      font-weight: 500; }
+  .t-num     { font-size: var(--fs-num);     line-height: var(--lh-num);     font-weight: 500; letter-spacing: -.01em; }
+  .t-body    { font-size: var(--fs-body);    line-height: var(--lh-body); }
+  .t-meta    { font-size: var(--fs-meta);    line-height: var(--lh-meta);    color: var(--c-ink2); }
+  .t-small   { font-size: var(--fs-small);   line-height: var(--lh-small); }
+  .t-hint    { font-size: var(--fs-micro);   line-height: var(--lh-hint);    color: var(--c-ink3); }
+
+  /* o cabeçalho de coluna de uma tabela impressa: itálico, frase, não caixa alta */
+  .t-col     { font-size: var(--fs-small); line-height: var(--lh-small); font-style: italic; color: var(--c-ink3); }
+  /* rótulo de campo: frase normal, tinta secundária — sem versalete */
+  .t-field   { font-size: var(--fs-small); line-height: var(--lh-small); font-weight: 500; color: var(--c-ink2); }
+
+  .ink  { color: var(--c-ink); }
+  .ink2 { color: var(--c-ink2); }
+  .ink3 { color: var(--c-ink3); }
+  .num  { font-variant-numeric: tabular-nums; }
+  .measure { max-width: var(--measure); }
+  /* A página inteira (cabeçalho + índice + texto) obedece a `--page`. Substitui o
+     `max-w-5xl` que dava 960px de conteúdo — ver a nota do token, acima. */
+  .page { max-width: var(--page); }
+
+  /* O passo entre seções. Era `mt-9` (36px) em 16 lugares, `mb-8` (32px) em
+     dois — três valores para a mesma função. Agora é um token só. O `.sec-top`
+     é para o bloco que abre a aba: ali o espaço vai embaixo, não em cima. */
+  .sec     { margin-top: var(--sp-6); }
+  .sec-top { margin-bottom: var(--sp-6); }
+
+  /* --------------------------------------------------------------------------
+     ESTRUTURA — régua em vez de card
+     -------------------------------------------------------------------------- */
+  /* Cabeçalho de seção: título + fio que corre até a margem direita.
+     O fio não é enfeite: ele diz onde a seção começa e onde termina. */
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) 14px; }
+  .sec-head::after {
+    content: ''; flex: 1 1 auto; height: 1px; min-width: 16px;
+    background: var(--c-rule); align-self: center;
+  }
+  /* Todo filho do cabeçalho pode ENCOLHER. Antes era `flex: none` em todos, com exceção
+     só para o h2 — então o `right` (a dica em .t-hint) não encolhia, e a 200% de texto a
+     dica de "Prioridade e matérias ativas" (421px) estourava um viewport de 400px
+     (medido: scrollWidth 461 × clientWidth 400). Com `flex: 0 1 auto` + `min-width: 0`
+     a dica desce para a linha de baixo. O fio (::after) segue sendo o único item que
+     CRESCE. Em 100% nada muda — medido byte a byte em 1080px nas cinco abas. */
+  .sec-head > * { flex: 0 1 auto; min-width: 0; }
+
+  .rule       { height: 1px; background: var(--c-rule); }
+  .rule-soft  { height: 1px; background: var(--c-rule-soft); }
+
+  /* linha de ledger: separada por fio, nunca por caixa */
+  .row { border-top: 1px solid var(--c-rule-soft); }
+  .row:first-child { border-top: 0; }
+
+  /* trilho da matéria: a cor entra como fio de 2px à esquerda da linha */
+  .rail { position: relative; }
+  .rail::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--rail, transparent);
+  }
+
+  /* superfície: SÓ para o que flutua sobre a página ou para o vazio que
+     precisa de contorno (modal, aviso, dropdown, estado vazio) */
+  .leaf { background: var(--c-leaf); border: 1px solid var(--c-rule); }
+  .well { background: var(--c-well); }
+
+  .nav-bg { background: var(--c-page-a); }
+  /* Aqui havia um `.dashed { border: 1px dashed var(--c-rule); }`. Removido: a classe
+     nunca foi usada — zero referências em markup e em JS, verificado por grep. Era o
+     único CSS morto do arquivo. Se um dia precisar de um contorno tracejado, ele volta
+     daqui, e volta junto com o uso. */
+
+  /* --------------------------------------------------------------------------
+     CONTROLES
+     -------------------------------------------------------------------------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    border-radius: 5px; padding: var(--sp-2) 14px;
+    font-family: inherit; font-size: var(--fs-small); font-weight: 500; line-height: var(--lh-small);
+    border: 1px solid transparent; cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  /* primário = tinta sólida. Sem cor de marca: o contraste é o destaque. */
+  .btn-pri { background: var(--c-ink); color: var(--c-page); border-color: var(--c-ink); }
+  .btn-pri:hover { background: var(--c-ink2); border-color: var(--c-ink2); }
+  .btn-ghost { background: transparent; border-color: var(--c-rule); color: var(--c-ink2); }
+  .btn-ghost:hover { border-color: var(--c-ink3); color: var(--c-ink); }
+  .btn-danger { background: transparent; border-color: var(--c-rule); color: var(--c-danger); }
+  .btn-danger:hover { border-color: var(--c-danger); }
+  .btn-sm { padding: 6px 10px; font-size: var(--fs-micro); line-height: var(--lh-hint); }
+  /* Caixa em rem, não em px. O ícone dentro é dimensionado em rem (h-4 / h-3.5) e por
+     isso ACOMPANHA o tamanho de texto que o usuário escolher. Com a caixa cravada em
+     30px, a 200% de texto o glifo virava 28px dentro de uma caixa de 26px: ele escapava
+     da própria área de clique, e a área visível deixava de corresponder ao alvo. Em rem
+     os dois crescem juntos. Em 100% (raiz 16px) dá exatamente 30px e 26px — a aparência
+     não muda; a mudança só aparece para quem redimensiona o texto. */
+  .btn-icon {
+    display: grid; place-items: center; width: 1.875rem; height: 1.875rem; border-radius: 0.3125rem;
+    border: 0; background: transparent; color: var(--c-ink3); cursor: pointer;
+    transition: color .16s ease, background .16s ease;
+  }
+  .btn-icon:hover { color: var(--c-ink); background: var(--c-hi); }
+  .btn-icon.is-danger:hover { color: var(--c-danger); }
+  .btn-icon.is-sm { width: 1.625rem; height: 1.625rem; }
+
+  .inp {
+    width: 100%; border-radius: 5px; border: 1px solid var(--c-rule);
+    background: var(--c-well); color: var(--c-ink);
+    padding: var(--sp-2) 10px; font-family: inherit; font-size: var(--fs-meta);
+    line-height: var(--lh-meta); transition: border-color .18s ease;
+  }
+  .inp::placeholder { color: var(--c-ink3); font-style: italic; }
+  .inp:hover { border-color: var(--c-ink3); }
+  .inp:focus { border-color: var(--c-ink); box-shadow: none; }
+  .inp:disabled { opacity: .45; cursor: not-allowed; }
+  .inp-sm { padding: 4px 8px; font-size: var(--fs-small); border-radius: 4px; }
+  select.inp { cursor: pointer; }
+
+  /* controle que se lê como TEXTO: o status do tópico, a prioridade.
+     Itálico, sem caixa — é um valor, não um botão. */
+  /* `min-height: 24px` é o piso de alvo da 2.5.8. O select media 22px de altura:
+     passava pela exceção de espaçamento, mas é o controle mais repetido da
+     aplicação (56× só em Conteúdos) e no toque era pequeno demais. */
+  .inp-quiet {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font-family: inherit; font-size: var(--fs-small); font-style: italic;
+    color: var(--c-ink2); padding: 2px 14px 2px 2px; border-radius: 3px; min-height: 24px;
+    background-repeat: no-repeat; background-position: right 2px center;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237E8796' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  }
+  .inp-quiet:hover { color: var(--c-ink); }
+  .inp-quiet:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 1px; }
+  /* A seta é um data-URI: não aceita `var()`, então a cor tem de ser repetida
+     aqui. Era #767D8B — a cor que este arquivo já tinha REJEITADO para
+     `--c-ink3` por dar 3,86:1 — e ficou para trás quando a tinta foi corrigida.
+     Agora acompanha a tinta terciária do tema. Se `--c-ink3` mudar de novo,
+     mudar aqui também: são as duas únicas cópias. */
+  html.claro .inp-quiet {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23636A78' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  }
+
+  /* botão de palavra: usado no lugar dos pares de pílula (tema, período).
+     A ativa não ganha fundo — ganha tinta cheia e um fio embaixo. */
+  .word {
+    border: 0; background: transparent; cursor: pointer; font-family: inherit;
+    font-size: var(--fs-small); font-style: italic; color: var(--c-ink3);
+    line-height: var(--lh-small);
+    padding: 2px 0; border-bottom: 1px solid transparent; min-height: 24px;
+    transition: color .16s ease, border-color .16s ease;
+  }
+  .word:hover { color: var(--c-ink2); }
+  .word[aria-pressed="true"], .word[aria-current="page"] { color: var(--c-ink); border-bottom-color: var(--c-ink); }
+
+  /* --------------------------------------------------------------------------
+     BARRA DE PROGRESSO + RÉGUA DE RITMO
+     -------------------------------------------------------------------------- */
+  .track { background: var(--c-track); border-radius: 1px; overflow: hidden; }
+  .fill  { height: 100%; border-radius: 1px; transition: width .7s cubic-bezier(.22, 1, .36, 1); }
+  /* onde você deveria estar hoje — a marca que dá sentido à barra */
+  .pace  { position: absolute; top: -3px; height: 14px; width: 1px; background: var(--c-ink); opacity: .75; }
+
+  /* --------------------------------------------------------------------------
+     INTERRUPTOR (matéria ativa)
+     -------------------------------------------------------------------------- */
+  .sw {
+    position: relative; flex: none; width: 40px; height: 24px; border-radius: 999px;
+    cursor: pointer; background: var(--c-track); border: 1px solid var(--c-sw-off);
+    transition: background .2s ease, border-color .2s ease;
+  }
+  /* Era 34×19 com botão de 13px: passava na exceção de espaçamento da 2.5.8, mas
+     no toque era o menor controle da tela. 24px é o piso de alvo da norma, e a
+     geometria foi reescalada inteira — subir só a altura achataria o botão
+     (22px de caixa útil para um botão de 13 deixaria 4px de folga). Caixa útil
+     38×22, botão 18, folga 2, curso 16. */
+  .sw::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--c-ink3);
+    transition: transform .2s cubic-bezier(.22, 1, .36, 1), background .2s ease;
+  }
+  .sw[aria-checked="true"] { background: var(--c-ink); border-color: var(--c-ink); }
+  .sw[aria-checked="true"]::after { transform: translateX(16px); background: var(--c-page); }
+  .sw:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* --------------------------------------------------------------------------
+     NAVEGAÇÃO — um índice impresso
+     -------------------------------------------------------------------------- */
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); border: 0;
+    cursor: pointer; background: transparent; font-family: inherit;
+    font-size: var(--fs-micro); color: var(--c-ink3); padding: 6px 4px;
+    border-radius: 4px; transition: color .18s ease;
+  }
+  .nav-btn:hover { color: var(--c-ink2); }
+  .nav-btn[aria-current="page"] { color: var(--c-ink); }
+  @media (min-width: 768px) {
+    .nav-btn {
+      flex-direction: row; justify-content: center; gap: var(--sp-2); padding: var(--sp-2) 2px 6px;
+      font-size: var(--fs-small); border-radius: 0;
+      border-bottom: 2px solid transparent;
+    }
+    /* no desktop a aba ativa é marcada por fio, como num índice */
+    .nav-btn[aria-current="page"] { border-bottom-color: var(--c-ink); }
+  }
+
+  /* --------------------------------------------------------------------------
+     MOVIMENTO — só o que responde a uma ação. Nada de entrada por seção.
+     -------------------------------------------------------------------------- */
+  @keyframes popIn   { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .anim-pop   { animation: popIn .16s ease-out both; }
+  .anim-sheet { animation: slideUp .22s cubic-bezier(.22, 1, .36, 1) both; }
+
+  input[type="date"] { color-scheme: dark; }
+  html.claro input[type="date"] { color-scheme: light; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  /* seta do select desenhada com a cor do tema */
+  select.inp {
+    appearance: none; background-image: none; padding-right: 2rem;
+    background-repeat: no-repeat; background-position: right .5rem center;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237E8796' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  }
+  html.claro select.inp {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23767D8B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Regras próprias (não dependem do JIT do CDN): o conteúdo inserido
+     dinamicamente só recebe overflow-x-auto depois que o Tailwind observa o
+     nó — o que causava um frame de rolagem horizontal na 1ª visita à aba. */
+  /* Conteúdo largo NÃO empurra a página: a rolagem fica no próprio bloco. Dois usos —
+     a tabela de histórico (min-w-[700px]) e o gráfico de 7 dias, cujos 7 rótulos de dia
+     mais os vãos pedem 374px numa coluna de 320px a 200% de texto. As barras e os
+     rótulos rolam JUNTOS porque ambos são filhos do mesmo contêiner. */
+  .scroll-x { overflow-x: auto; }
+  .scroll-y { overflow-y: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important; scroll-behavior: auto !important;
+    }
+  }
+</style>
+
+<script>
+  /* Aplica o tema antes da primeira pintura — evita o flash de tema errado. */
+  try {
+    var _st = JSON.parse(localStorage.getItem('rotina-ita-v1') || 'null');
+    if (_st && _st.settings && _st.settings.theme === 'claro') document.documentElement.classList.add('claro');
+  } catch (e) {}
+</script>
+</head>
+
+<body class="min-h-screen antialiased" data-page-node-id="DuFjv2YrS2HclRzXBKFUai">
+
+<div class="page mx-auto px-5 pb-28 pt-8 md:px-8 md:pb-16 md:pt-12" data-page-node-id="BWVg61ZEnykQEW15Yl3vFW">
+
+  <!-- ============ MASTHEAD ============ -->
+  <!-- O título é um cabeçalho de jornal, não um logo em caixinha: palavra,
+       fio, e o estado da semana correndo à direita. -->
+  <header class="border-b pb-3 md:border-b-0 md:pb-0" style="border-color: var(--c-rule)"
+          data-page-node-id="kvjcP9OFe6EDjsQT0ANBGD">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5" data-page-node-id="PGj2p50AlAG7ztSH0h6v6s">
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1" data-page-node-id="HJm6NR36WZTrLoorsZqSXi">
+        <h1 class="t-h1 ink" data-page-node-id="epIlw8rVHVUvvPYXLZdGfl">Rotina ITA</h1>
+        <p class="t-meta" data-page-node-id="CbOWg8KLyJth6ChjFwgDwC">organizador de estudos</p>
+      </div>
+      <div id="hdr-chip" class="t-small ink2" data-page-node-id="dr9PX9fhLDVKM0Ee2VF0NL"></div>
+    </div>
+  </header>
+
+  <!-- ============ NAV — um índice, com o fio fechando o cabeçalho ============ -->
+  <nav id="nav" class="nav-bg fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 gap-1 border-t px-2 py-2 backdrop-blur-md md:static md:mt-4 md:border-b md:border-t-0 md:bg-transparent md:p-0 md:pb-2 md:backdrop-blur-none"
+       style="border-color: var(--c-rule); padding-bottom: max(0.5rem, env(safe-area-inset-bottom))" data-page-node-id="4VzTahrk48fb0SWeJHjEYT"></nav>
+
+  <!-- ============ VIEW ============ -->
+  <main id="view" class="mt-6" data-page-node-id="Rr9Gdm6jLRmt28JDA1Mbg5"></main>
+</div>
+
+<div id="modal-root" class="hidden" data-page-node-id="dkx3eKzfrSsT55vHnV24DU"></div>
+<!-- O aviso é o ÚNICO retorno que a aplicação dá para qualquer ação — e era um
+     div puramente visual: quem usa leitor de tela não recebia retorno nenhum, nem
+     nos erros. Região viva no CONTÊINER (que já existe no carregamento, que é o
+     que os leitores de tela exigem para anunciar o que entra depois), com
+     aria-atomic="false" para que só o aviso recém-inserido seja lido — e não a
+     pilha inteira de novo. Todos os avisos vão pelo canal "polite" de propósito:
+     nascem de uma ação do próprio usuário, então nenhum justifica interromper. -->
+<div id="toast-root" class="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4"
+     role="status" aria-live="polite" aria-atomic="false" data-page-node-id="qGWJINW36f3KNt1zveBNrt"></div>
+
+<script>
+/* ============================================================================
+   ROTINA ITA — SPA de organização de estudos
+   HTML5 + Tailwind (CDN, layout) + camada de tokens própria (cor/tipografia)
+   + Vanilla JS ES6+ · persistência em localStorage
+   Regras: sem automações punitivas, sem IA, sem cronômetro, registro manual.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. CONSTANTES
+   ------------------------------------------------------------------------- */
+const LS_KEY = 'rotina-ita-v1';
+
+/* Cada matéria tem TRÊS variantes, porque um único hex não passa AA nos dois temas:
+   - color : identidade (barras, pontos, trilhos) — usada como preenchimento
+   - deep  : texto/ícone sobre fundo CLARO. Conferido >= 5:1 sobre o fundo do chip
+             (a própria cor a 12% sobre o painel #F4F6FA, que é mais escuro que o
+             card branco e portanto o pior caso). Não clareie sem medir de novo.
+   - light : texto/ícone sobre fundo ESCURO. Conferido >= 5:1 sobre #161B26.
+   Sem as três, Matemática/Português/Redação ficavam em 2,9-3,6:1 no tema escuro.
+
+   CONTRASTE NÃO BASTA: as cores também têm de ser DISTINGUÍVEIS ENTRE SI, porque a
+   cor é a identidade da matéria — duas matérias com cores parecidas anulam o código.
+   Medido em CIEDE2000, nas três variantes. Português (violeta, matiz 258°) e Redação
+   (púrpura, 271°) estavam a ΔE00 4,99: indistinguíveis num ponto de 7px e num trilho
+   de 2px. Redação passou para rosa (matiz 330°), e o pior par da paleta foi de 4,99
+   para 12,32 (Matemática x Português, deep). Meça o ΔE de TODOS os pares antes de
+   trocar qualquer cor. */
+const SUBJECTS = [
+  { id: 'matematica', name: 'Matemática', short: 'MAT', icon: 'sigma',         color: '#2563EB', deep: '#1D4ED8', light: '#60A5FA' }, // 5.27
+  { id: 'fisica',     name: 'Física',     short: 'FIS', icon: 'atom',          color: '#06B6D4', deep: '#0D6B85', light: '#22D3EE' }, // 5.04
+  { id: 'quimica',    name: 'Química',    short: 'QUI', icon: 'flask-conical', color: '#10B981', deep: '#047152', light: '#34D399' }, // 5.02
+  { id: 'portugues',  name: 'Português',  short: 'POR', icon: 'book-open',     color: '#8B5CF6', deep: '#6D28D9', light: '#A78BFA' }, // 5.69
+  { id: 'ingles',     name: 'Inglês',     short: 'ING', icon: 'languages',     color: '#F59E0B', deep: '#A24B08', light: '#FBBF24' }, // 5.04
+  { id: 'redacao',    name: 'Redação',    short: 'RED', icon: 'pen-line',      color: '#EC4899', deep: '#9D174D', light: '#F472B6' }, // 6.31
+];
+const SUBJECT_MAP = Object.fromEntries(SUBJECTS.map(s => [s.id, s]));
+
+const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+const DAYS_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+const STATUS = {
+  nao_iniciado: { label: 'Não iniciado' },
+  em_estudo:    { label: 'Em estudo' },
+  concluido:    { label: 'Concluído' },
+};
+
+const PRIORITY = {
+  alta:  { label: 'Alta',  weight: 3 },
+  media: { label: 'Média', weight: 2 },
+  baixa: { label: 'Baixa', weight: 1 },
+};
+
+const TYPES = {
+  teoria:     'Teoria',
+  exercicios: 'Exercícios',
+  revisao:    'Revisão',
+};
+
+const SEED = {
+  matematica: ['Funções e gráficos', 'Trigonometria', 'Matrizes e determinantes', 'Geometria analítica',
+               'Números complexos', 'Polinômios e equações', 'Progressões', 'Logaritmos e exponenciais',
+               'Análise combinatória', 'Probabilidade e estatística', 'Sistemas lineares'],
+  fisica: ['Cinemática', 'Leis de Newton', 'Trabalho e energia', 'Impulso e quantidade de movimento',
+           'Gravitação universal', 'Hidrostática e hidrodinâmica', 'Termologia e calorimetria',
+           'Ondulatória', 'Óptica geométrica', 'Eletrostática', 'Eletrodinâmica', 'Magnetismo e indução'],
+  quimica: ['Estrutura atômica', 'Tabela periódica', 'Ligações químicas', 'Funções inorgânicas',
+            'Estequiometria', 'Soluções e concentração', 'Termoquímica', 'Cinética química',
+            'Equilíbrio químico', 'Eletroquímica', 'Química orgânica — funções', 'Polímeros'],
+  portugues: ['Interpretação de texto', 'Sintaxe — termos da oração', 'Concordância verbal e nominal',
+              'Regência e crase', 'Pontuação', 'Figuras de linguagem', 'Literatura — modernismo',
+              'Semântica e coesão'],
+  ingles: ['Estratégias de leitura', 'Vocabulário acadêmico', 'Tempos verbais', 'Voz passiva',
+           'Pronomes relativos', 'False friends e cognatos', 'Cloze tests'],
+  redacao: ['Estrutura dissertativo-argumentativa', 'Repertório sociocultural', 'Coesão e coerência',
+            'Proposta de intervenção', 'Argumentação e refutação', 'Modalidades — carta e crônica'],
+};
+
+/* ---------------------------------------------------------------------------
+   2. UTILITÁRIOS
+   ------------------------------------------------------------------------- */
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function iso(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function mondayOf(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+function weekKeyOf(date = new Date()) { return iso(mondayOf(date)); }
+function weekRange(date = new Date()) {
+  const start = mondayOf(date);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { start: iso(start), end: iso(end), startObj: start };
+}
+function todayIndex() { return (new Date().getDay() + 6) % 7; }
+function todayIso() { return iso(new Date()); }
+
+function addDaysIso(baseIsoStr, n) {
+  const [y, m, d] = baseIsoStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + n);
+  return iso(dt);
+}
+
+function fmtMinutes(m) {
+  m = Math.max(0, Math.round(Number(m) || 0));
+  const h = Math.floor(m / 60), r = m % 60;
+  if (h && r) return `${h}h ${r}m`;
+  if (h) return `${h}h`;
+  return `${r}m`;
+}
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const pct = (a, b) => (b > 0 ? clamp((a / b) * 100, 0, 100) : 0);
+const rgba = (hex, a) => {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
+
+const isClaro = () => document.documentElement.classList.contains('claro');
+/* cor de texto/ícone legível da matéria no tema atual */
+/* A cor de preenchimento (barras, pontos, trilhos) segue o TEMA, não a identidade:
+   no claro vale `deep` (a variante escura), no escuro vale `light`. Usar a cor-base
+   no claro dava 1,8:1 sobre o trilho — reprovava em 1.4.11 (objetos gráficos, 3:1).
+   Ela também tem de contrastar com o TRILHO, não só com a página. */
+const subjFill = s => (isClaro() ? s.deep : s.light);
+
+function longDate(d = new Date()) {
+  const s = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(d);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function shortDate(dateIso) {
+  if (!dateIso) return '—';
+  const [, m, d] = dateIso.split('-').map(Number);
+  return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+}
+function dayNameFromIso(dateIso) {
+  const [y, m, d] = dateIso.split('-').map(Number);
+  return DAYS_SHORT[(new Date(y, m - 1, d).getDay() + 6) % 7];
+}
+
+/* ---------------------------------------------------------------------------
+   2. RÓTULOS E CLASSES DE CONTROLE
+   ---------------------------------------------------------------------------
+   Sem `chip`: estado e prioridade agora são palavras (statusWord/priorityWord),
+   então o mapa guarda só rótulo e peso. */
+function field(label, control, hint) {
+  return `<label class="block"><span class="mb-1.5 block t-field">${esc(label)}</span>${control}${
+    hint ? `<span class="mt-1.5 block t-hint">${esc(hint)}</span>` : ''}</label>`;
+}
+
+const INP = 'inp';
+const BTN_PRI = 'btn btn-pri';
+const BTN_GHOST = 'btn btn-ghost';
+const BTN_DANGER = 'btn btn-danger';
+const BTN_ICON = 'btn-icon';
+
+/* ---------------------------------------------------------------------------
+   3. ESTADO + PERSISTÊNCIA
+   ------------------------------------------------------------------------- */
+function defaultState() {
+  const topics = [];
+  SUBJECTS.forEach(s => {
+    (SEED[s.id] || []).forEach(name => {
+      topics.push({ id: uid(), subjectId: s.id, name, status: 'nao_iniciado', archived: false, createdAt: Date.now() });
+    });
+  });
+  return {
+    version: 2,
+    settings: {
+      weeklyGoalHours: 25,
+      weeklyAvailabilityHours: 35,
+      theme: 'escuro',
+      priorities: { matematica: 'alta', fisica: 'alta', quimica: 'media', portugues: 'media', ingles: 'baixa', redacao: 'media' },
+      activeSubjects: SUBJECTS.map(s => s.id),
+    },
+    topics,
+    /* `plannedMinutes` é o PLANO. O REALIZADO vive em `sessions.minutes` — não
+       existe `minutes` aqui desde a separação plano/realizado; o normalizador
+       ainda lê `a.minutes` apenas para migrar estados antigos. O comentário
+       antigo dizia `minutes`, e foi o que sobrou da renomeação. */
+    activities: [],   // { id, topicId, subjectId, plannedMinutes, priority, day: 0-6 | null, weekKey, done, doneAt }
+    sessions:  [],    // { id, date, subjectId, topicId|null, minutes, type, notes, activityId|null }
+  };
+}
+
+/* normaliza qualquer estado vindo do storage (arrays vazios / chaves faltando) */
+function normalize(raw) {
+  const def = defaultState();
+  if (!raw || typeof raw !== 'object') return def;
+  const s = {
+    version: 2,
+    settings: Object.assign({}, def.settings, raw.settings || {}),
+    topics: Array.isArray(raw.topics) ? raw.topics : [],
+    activities: Array.isArray(raw.activities) ? raw.activities : [],
+    sessions: Array.isArray(raw.sessions) ? raw.sessions : [],
+  };
+  s.settings.priorities = Object.assign({}, def.settings.priorities, s.settings.priorities || {});
+  s.settings.theme = (s.settings.theme === 'claro' || s.settings.theme === 'escuro') ? s.settings.theme : 'escuro';
+  s.settings.activeSubjects = Array.isArray(s.settings.activeSubjects) && s.settings.activeSubjects.length
+    ? s.settings.activeSubjects.filter(id => SUBJECT_MAP[id])
+    : def.settings.activeSubjects;
+  if (!Number.isFinite(Number(s.settings.weeklyGoalHours))) s.settings.weeklyGoalHours = def.settings.weeklyGoalHours;
+  if (!Number.isFinite(Number(s.settings.weeklyAvailabilityHours))) s.settings.weeklyAvailabilityHours = def.settings.weeklyAvailabilityHours;
+
+  s.topics = s.topics
+    .filter(t => t && SUBJECT_MAP[t.subjectId])
+    .map(t => ({
+      id: String(t.id || uid()),
+      subjectId: t.subjectId,
+      name: String(t.name || 'Sem nome'),
+      status: STATUS[t.status] ? t.status : 'nao_iniciado',
+      archived: !!t.archived,
+      createdAt: Number(t.createdAt) || Date.now(),
+    }));
+  s.activities = s.activities
+    .filter(a => a && a.topicId)
+    .map(a => {
+      const topic = s.topics.find(t => t.id === a.topicId);
+      return {
+        id: String(a.id || uid()),
+        topicId: a.topicId,
+        subjectId: (topic && topic.subjectId) || a.subjectId || 'matematica',
+        /* plannedMinutes é IMUTÁVEL: é o PLANO, não o realizado. Antes havia só
+           `minutes`, e save-complete o sobrescrevia com a duração real — então o
+           "Planejado nesta semana" mudava sozinho ao concluir, e "planejei 20h,
+           cumpri 18h" era ilegível (os dois números colapsavam num só). O realizado
+           vive na SESSÃO, ligada por activityId. Migração: dado antigo não tem o
+           campo; para atividade já concluída o plano original é irrecuperável (foi
+           sobrescrito), então `minutes` — que ali guarda o real — é a melhor
+           aproximação disponível. Ela é estável e para de mudar daqui em diante. */
+        plannedMinutes: clamp(Math.round(Number(a.plannedMinutes ?? a.minutes) || 0), 0, 1440),
+        priority: PRIORITY[a.priority] ? a.priority : 'media',
+        day: a.day === null || a.day === undefined ? null : clamp(Number(a.day), 0, 6),
+        weekKey: a.weekKey || weekKeyOf(),
+        done: !!a.done,
+        doneAt: a.doneAt || null,
+      };
+    })
+    .filter(a => s.topics.some(t => t.id === a.topicId));
+  s.sessions = s.sessions
+    .filter(x => x && SUBJECT_MAP[x.subjectId])
+    .map(x => ({
+      id: String(x.id || uid()),
+      date: /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : todayIso(),
+      subjectId: x.subjectId,
+      topicId: x.topicId && s.topics.some(t => t.id === x.topicId) ? x.topicId : null,
+      minutes: clamp(Math.round(Number(x.minutes) || 0), 0, 1440),
+      type: TYPES[x.type] ? x.type : 'teoria',
+      notes: String(x.notes || ''),
+      activityId: x.activityId || null,
+    }));
+  return s;
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return defaultState();
+    return normalize(JSON.parse(raw));
+  } catch (err) {
+    console.warn('Falha ao ler localStorage — usando estado padrão.', err);
+    return defaultState();
+  }
+}
+function save() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+  catch (err) { toast('Não foi possível salvar localmente.', 'error'); console.warn(err); }
+}
+
+let S = load();
+
+/* estado de UI (não persistido) */
+const UI = {
+  tab: 'hoje',
+  progPeriod: 'semana',
+  histLimit: 15,
+  showArchived: {},   // subjectId -> bool
+};
+
+/* ---------------------------------------------------------------------------
+   4. TEMA
+   ------------------------------------------------------------------------- */
+function applyTheme() {
+  const claro = S.settings.theme === 'claro';
+  document.documentElement.classList.toggle('claro', claro);
+  const meta = $('#meta-tema');
+  if (meta) meta.setAttribute('content', claro ? '#F6F7FA' : '#0B0F19');
+}
+
+/* ---------------------------------------------------------------------------
+   5. CONSULTAS DERIVADAS
+   ------------------------------------------------------------------------- */
+const currentWeekActivities = () => S.activities.filter(a => a.weekKey === weekKeyOf());
+const pastOpenActivities = () => S.activities.filter(a => a.weekKey !== weekKeyOf() && !a.done);
+const weekSessions = () => {
+  const { start, end } = weekRange();
+  return S.sessions.filter(s => s.date >= start && s.date <= end);
+};
+const weekMinutes = () => weekSessions().reduce((sum, s) => sum + s.minutes, 0);
+const goalMinutes = () => Math.max(0, Math.round(Number(S.settings.weeklyGoalHours) || 0) * 60);
+const availabilityMinutes = () => Math.max(0, Math.round(Number(S.settings.weeklyAvailabilityHours) || 0) * 60);
+const topicById = id => S.topics.find(t => t.id === id);
+const subjectOf = id => SUBJECT_MAP[id] || SUBJECTS[0];
+const visibleTopics = subjectId => S.topics.filter(t => t.subjectId === subjectId && !t.archived);
+const isActiveSubject = id => S.settings.activeSubjects.includes(id);
+
+/* quanto do ritmo da semana já deveria estar cumprido ao fim de hoje */
+const pacePct = () => ((todayIndex() + 1) / 7) * 100;
+
+function plannedMinutesBySubject() {
+  const map = {};
+  SUBJECTS.forEach(s => { map[s.id] = 0; });
+  currentWeekActivities().forEach(a => { map[a.subjectId] = (map[a.subjectId] || 0) + a.plannedMinutes; });
+  return map;
+}
+function suggestedMinutesBySubject() {
+  const map = {};
+  const actives = SUBJECTS.filter(s => isActiveSubject(s.id));
+  const total = actives.reduce((sum, s) => sum + (PRIORITY[S.settings.priorities[s.id] || 'media'].weight), 0);
+  actives.forEach(s => {
+    map[s.id] = total ? Math.round((goalMinutes() * PRIORITY[S.settings.priorities[s.id] || 'media'].weight) / total) : 0;
+  });
+  SUBJECTS.filter(s => !isActiveSubject(s.id)).forEach(s => { map[s.id] = 0; });
+  return map;
+}
+
+/* ---------------------------------------------------------------------------
+   6. TOAST / MODAL
+   ------------------------------------------------------------------------- */
+function toast(msg, kind = 'ok') {
+  const root = $('#toast-root');
+  /* o aviso é uma faixa pautada, não uma pílula: fio de 2px à esquerda na cor
+     do estado, o resto em tinta. */
+  const cor = { ok: 'var(--c-ok)', error: 'var(--c-danger)', info: 'var(--c-ink3)' }[kind] || 'var(--c-ink3)';
+  const el = document.createElement('div');
+  el.className = 'anim-pop pointer-events-auto leaf rail t-small ink px-4 py-2.5';
+  el.style.setProperty('--rail', cor);
+  el.style.boxShadow = '0 6px 20px -12px rgba(0,0,0,.6)';
+  el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .25s ease'; }, 2400);
+  setTimeout(() => el.remove(), 2700);
+}
+
+let focoAntesDoModal = null;
+function modal({ title, sub, body, footer, wide }) {
+  const root = $('#modal-root');
+  /* Guarda quem tinha o foco para devolvê-lo ao fechar. Sem isso, quem navega por
+     teclado perde o lugar: fecha o diálogo e o foco fica solto na página. */
+  if (document.activeElement && document.activeElement !== document.body) focoAntesDoModal = document.activeElement;
+  /* o modal é uma das poucas coisas que FLUTUA — por isso, e só por isso,
+     ele ganha superfície. O cabeçalho é fechado por fio, não por sombra. */
+  /* role/aria-modal/aria-labelledby: sem eles o diálogo não se anuncia como diálogo
+     e o conteúdo de trás continua alcançável pelo leitor de tela — a barreira era
+     só visual (`overflow: hidden` no body barra a rolagem, não a navegação). */
+  root.innerHTML = `
+    <div data-act="modal-backdrop" class="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm md:items-center md:p-4">
+      <div class="anim-sheet scroll-y w-full leaf ${wide ? 'md:max-w-2xl' : 'md:max-w-lg'} max-h-[92vh]"
+           role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+        <div class="flex items-start justify-between gap-4 px-5 py-4" style="border-bottom: 1px solid var(--c-rule)">
+          <div class="min-w-0">
+            <h3 class="t-h2 ink" id="modal-titulo">${esc(title)}</h3>
+            ${sub ? `<p class="mt-1 t-meta">${esc(sub)}</p>` : ''}
+          </div>
+          <button type="button" data-act="close-modal" class="${BTN_ICON} shrink-0" aria-label="Fechar"><i data-lucide="x"></i></button>
+        </div>
+        <div class="px-5 py-5">${body}</div>
+        <div class="flex flex-wrap items-center justify-end gap-2 px-5 py-4" style="border-top: 1px solid var(--c-rule)">${footer}</div>
+      </div>
+    </div>`;
+  root.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  paint();
+  const first = root.querySelector('input, select, textarea');
+  if (first) setTimeout(() => first.focus(), 60);
+}
+function closeModal() {
+  const root = $('#modal-root');
+  root.classList.add('hidden');
+  root.innerHTML = '';
+  document.body.style.overflow = '';
+  /* devolve o foco a quem abriu o diálogo — se ainda estiver na página */
+  if (focoAntesDoModal && document.contains(focoAntesDoModal)) {
+    try { focoAntesDoModal.focus(); } catch (err) { /* elemento pode ter sido removido pelo render */ }
+  }
+  focoAntesDoModal = null;
+}
+
+let pendingConfirm = null;
+function confirmModal({ title, text, confirmLabel = 'Confirmar', danger = true, onConfirm }) {
+  pendingConfirm = onConfirm;
+  modal({
+    title,
+    body: `<p class="t-body ink2">${esc(text)}</p>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${danger ? BTN_DANGER : BTN_PRI}" data-act="confirm-yes">${esc(confirmLabel)}</button>`,
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   7. RENDER PRINCIPAL
+   ------------------------------------------------------------------------- */
+/* Ícones como SVG inline, um mapa por nome. Cada entrada é o outerHTML que a
+   própria lucide@1.52.0 produzia — colhido por renderização em
+   verificacao/colheita_completa.json, não digitado de memória. Troca os
+   435,9 KB do UMD por 10,8 KB de mapa, com a marcação idêntica à do
+   controle, atributo por atributo: width/height 24 ficam (quem dimensiona
+   é a classe do call-site, como sempre foi). */
+const ICONES = {
+  'calendar-check': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calendar-check" aria-hidden="true" class="lucide lucide-calendar-check"><path d="M8 2v3"></path><path d="M16 2v3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="m9 15 2 2 4-4"></path></svg>',
+  'calendar-days': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calendar-days" aria-hidden="true" class="lucide lucide-calendar-days"><path d="M8 2v3"></path><path d="M16 2v3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="M8 13h.01"></path><path d="M12 13h.01"></path><path d="M16 13h.01"></path><path d="M8 17h.01"></path><path d="M12 17h.01"></path><path d="M16 17h.01"></path></svg>',
+  'book-open': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="book-open" aria-hidden="true" class="lucide lucide-book-open"><path d="M12 5v16"></path><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"></path></svg>',
+  'chart-column': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chart-column" aria-hidden="true" class="lucide lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>',
+  'settings': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="settings" aria-hidden="true" class="lucide lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+  'sun': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sun" aria-hidden="true" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>',
+  'history': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="history" aria-hidden="true" class="lucide lucide-history"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>',
+  'calendar-x': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calendar-x" aria-hidden="true" class="lucide lucide-calendar-x"><path d="M8 2v3"></path><path d="M16 2v3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="m14 13-4 4"></path><path d="m10 13 4 4"></path></svg>',
+  'check': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check" aria-hidden="true" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"></path></svg>',
+  'save': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="save" aria-hidden="true" class="lucide lucide-save"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"></path><path d="M7 3v4a1 1 0 0 0 1 1h7"></path></svg>',
+  'x': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>',
+  'plus': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" aria-hidden="true" class="lucide lucide-plus"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>',
+  'pencil': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>',
+  'trash-2': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+  'list-plus': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="list-plus" aria-hidden="true" class="lucide lucide-list-plus"><path d="M16 5H3"></path><path d="M11 12H3"></path><path d="M16 19H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path></svg>',
+  'download': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" aria-hidden="true" class="lucide lucide-download"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>',
+  'upload': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="upload" aria-hidden="true" class="lucide lucide-upload"><path d="M12 3v12"></path><path d="m17 8-5-5-5 5"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>',
+  'archive': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="archive" aria-hidden="true" class="lucide lucide-archive"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>',
+  'rotate-ccw': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" aria-hidden="true" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>',
+  'chevron-down': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"></path></svg>',
+  'chevron-right': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"></path></svg>',
+  'sigma': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sigma" aria-hidden="true" class="lucide lucide-sigma"><path d="M18 7V5a1 1 0 0 0-1-1H6.5a.5.5 0 0 0-.4.8l4.5 6a2 2 0 0 1 0 2.4l-4.5 6a.5.5 0 0 0 .4.8H17a1 1 0 0 0 1-1v-2"></path></svg>',
+  'atom': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="atom" aria-hidden="true" class="lucide lucide-atom"><circle cx="12" cy="12" r="1"></circle><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"></path><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"></path></svg>',
+  'flask-conical': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="flask-conical" aria-hidden="true" class="lucide lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path><path d="M6.453 15h11.094"></path><path d="M8.5 2h7"></path></svg>',
+  'languages': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="languages" aria-hidden="true" class="lucide lucide-languages"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>',
+  'pen-line': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pen-line" aria-hidden="true" class="lucide lucide-pen-line"><path d="M13 21h8"></path><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>',
+};
+/* Substitui os <i data-lucide> pelo SVG do mapa repetindo o merge que o
+   createIcons() fazia: os atributos do placeholder são copiados por cima
+   dos defaults, a classe é ANEXADA depois de `lucide lucide-<nome>` e um
+   placeholder com aria-label não leva aria-hidden. Um call site depende
+   disso — o check verde da aba Hoje passa style="color:var(--c-ok)" e a
+   classe do nav passava h-[18px] w-[18px].
+   A query é só <i>: o <svg> resultado carrega data-lucide, e uma query
+   genérica por [data-lucide] re-processaria o próprio substituto a cada
+   render, acumulando classe. Ícone fora do mapa não é apagado em silêncio —
+   fica como <i> órfão e o nome aparece no console. */
+function paint() {
+  const faltando = [];
+  document.querySelectorAll('i[data-lucide]').forEach(el => {
+    const nome = el.getAttribute('data-lucide');
+    const html = ICONES[nome];
+    if (!html) { faltando.push(nome); return; }
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const svg = tpl.content.firstElementChild;
+    if (!svg) { faltando.push(nome); return; }
+    [...el.attributes].forEach(a => {
+      if (a.name === 'data-lucide') return;
+      if (a.name === 'class') {
+        svg.setAttribute('class', svg.getAttribute('class') + ' ' + a.value);
+      } else {
+        svg.setAttribute(a.name, a.value);
+      }
+    });
+    if (el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) {
+      svg.removeAttribute('aria-hidden');
+    }
+    el.replaceWith(svg);
+  });
+  if (faltando.length) console.warn('Ícone ausente do mapa ICONES:', faltando.join(', '));
+}
+
+
+function renderNav() {
+  const items = [
+    { id: 'hoje',      label: 'Hoje',      icon: 'calendar-check' },
+    { id: 'semana',    label: 'Semana',    icon: 'calendar-days' },
+    { id: 'conteudos', label: 'Conteúdos', icon: 'book-open' },
+    { id: 'progresso', label: 'Progresso', icon: 'chart-column' },
+    { id: 'ajustes',   label: 'Ajustes',   icon: 'settings' },
+  ];
+  $('#nav').innerHTML = items.map(it => `
+    <button type="button" class="nav-btn" data-act="tab" data-tab="${it.id}"
+      ${UI.tab === it.id ? 'aria-current="page"' : ''}>
+      <i data-lucide="${it.icon}" class="h-[18px] w-[18px]"></i>
+      <span>${it.label}</span>
+    </button>`).join('');
+}
+
+function renderHeaderChip() {
+  /* O "cabeçalho corrente" de um jornal: o estado da semana correndo à
+     direita do título, em tinta baixa. Era uma pílula com fundo e borda. */
+  const acts = currentWeekActivities();
+  const done = acts.filter(a => a.done).length;
+  $('#hdr-chip').innerHTML =
+    `<span class="ink3">semana</span> <span class="num ink">${fmtMinutes(weekMinutes())}</span> <span class="ink3">de ${fmtMinutes(goalMinutes())}</span>${
+      acts.length ? `<span class="hidden ink3 sm:inline">, ${done} de ${acts.length} concluídas</span>` : ''}`;
+}
+
+/* ---------------------------------------------------------------------------
+   FOCO ATRAVÉS DO RENDER
+   ---------------------------------------------------------------------------
+   `render()` reescreve #nav e #view com innerHTML. Todo elemento focado deixa de
+   existir, e o foco do navegador cai para `body` — sem erro, sem aviso, e a tela
+   fica idêntica. A consequência é de teclado: o próximo Tab recomeça do TOPO do
+   documento. Medido antes desta correção: mudando o status do 1º de 56 tópicos,
+   `document.activeElement` virava `body` e o Tab ia para o botão do #nav.
+
+   A identidade do elemento é reconstruída por tag + TODOS os data-*, porque é o
+   que o render preserva: `set-status` tem data-id (o tópico), `set-prio` e
+   `toggle-subject` têm data-subject, `prog-period` tem data-period, e `set-goal`
+   e `set-avail` são únicos pelo próprio data-act. Comparar por posição não serve
+   (a lista muda de tamanho); comparar por texto não serve (o rótulo muda). */
+function chaveDeFoco(el) {
+  if (!el || !el.dataset) return null;
+  const partes = Object.keys(el.dataset).sort().map(k => `${k}=${el.dataset[k]}`);
+  return `${el.tagName.toLowerCase()}|${partes.join('&')}`;
+}
+
+function capturarFoco() {
+  const el = document.activeElement;
+  if (!el || el === document.body || !el.dataset) return null;
+  const chave = chaveDeFoco(el);
+  if (!chave) return null;
+  /* seleção de texto: sem ela o cursor volta para o início do campo e digitar
+     continua no lugar errado. `selectionStart` é null em input[type=number]. */
+  const sel = typeof el.selectionStart === 'number'
+    ? { ini: el.selectionStart, fim: el.selectionEnd } : null;
+  return { chave, sel };
+}
+
+function restaurarFoco(snap) {
+  if (!snap) return;
+  const alvo = Array.from(document.querySelectorAll('[data-act]'))
+    .find(el => chaveDeFoco(el) === snap.chave);
+  /* o controle pode ter sumido no novo render (ex.: "Carregar mais" quando não
+     há mais nada a carregar). Nesse caso não há o que restaurar. */
+  if (!alvo) return;
+  alvo.focus();
+  if (snap.sel && typeof alvo.setSelectionRange === 'function') {
+    try { alvo.setSelectionRange(snap.sel.ini, snap.sel.fim); } catch (err) { /* type=number recusa */ }
+  }
+}
+
+function render() {
+  const foco = capturarFoco();
+  renderNav();
+  renderHeaderChip();
+  const map = { hoje: viewHoje, semana: viewSemana, conteudos: viewConteudos, progresso: viewProgresso, ajustes: viewAjustes };
+  $('#view').innerHTML = (map[UI.tab] || viewHoje)();
+  paint();
+  restaurarFoco(foco);
+}
+
+/* ---------------------------------------------------------------------------
+   8. COMPONENTES
+   ---------------------------------------------------------------------------
+   Três trocas de fundo, todas tiradas da mesma tese (a cor pertence à matéria;
+   a régua carrega a estrutura):
+
+   1. a matéria deixa de ser uma PÍLULA com fundo tingido e vira um PONTO de
+      7px + o nome em tinta. O ponto basta: tingir o fundo para dizer "Física"
+      gasta a cor da matéria em decoração.
+   2. estado e prioridade deixam de ser pílulas e viram PALAVRAS em itálico —
+      é o que se escreve num caderno. O texto carrega o sentido; a cor reforça.
+   3. a cifra deixa de ser um "stat card" e vira uma coluna de ledger: rótulo
+      em cima, número embaixo, sem caixa nenhuma.
+   -------------------------------------------------------------------------- */
+function subjectDot(s, size = 7) {
+  return `<span class="inline-block shrink-0 rounded-full" style="width:${size}px;height:${size}px;background:${subjFill(s)}"></span>`;
+}
+function subjectName(subjectId) {
+  const s = subjectOf(subjectId);
+  return `<span class="inline-flex items-baseline gap-2">${subjectDot(s)}<span class="ink2">${esc(s.name)}</span></span>`;
+}
+/* prioridade é uma ORDEM, não um estado — e ordem, num índice impresso, se diz
+   por peso de tinta, não por cor. Isso também devolve a cor da linha inteira à
+   matéria: a bolinha era o único colorido que sobrava. */
+function priorityWord(p) {
+  const pr = PRIORITY[p] || PRIORITY.media;
+  const estilo = p === 'alta' ? 'color:var(--c-ink);font-weight:600'
+    : p === 'baixa' ? 'color:var(--c-ink3)'
+    : 'color:var(--c-ink2)';
+  return `<span class="italic" style="${estilo}">${pr.label}</span>`;
+}
+function statusWord(st) {
+  const s = STATUS[st] || STATUS.nao_iniciado;
+  const cor = st === 'concluido' ? 'var(--c-ok)' : st === 'em_estudo' ? 'var(--c-ink)' : 'var(--c-ink3)';
+  return `<span class="italic" style="color:${cor}">${s.label}</span>`;
+}
+
+/* barra de progresso. `pace` desenha a régua de ritmo (onde você deveria estar).
+   Ponta reta, não pílula: é uma régua, não um medidor de app. */
+function progressBar(value, max, color = 'var(--c-ink)', height = 6, pace = null) {
+  const p = pct(value, max);
+  const h = typeof height === 'number' ? `${height}px` : height;
+  return `<div class="relative w-full">
+    <div class="track w-full" style="height:${h}">
+      <div class="fill" style="width:${p}%;background:${color}"></div>
+    </div>
+    ${pace !== null ? `<span class="pace" style="left:${clamp(pace, 0, 100)}%" title="Ritmo esperado até hoje: ${Math.round(pace)}%"></span>` : ''}
+  </div>`;
+}
+
+/* vazio: a ÚNICA superfície que este desenho permite fora do que flutua (modal,
+   aviso). Sem ela o estado vazio era uma frase solta no meio da página, sem
+   forma e sem pista do que fazer. Fio de 1px, canto reto, ícone simbólico —
+   papel pautado, não card. */
+function emptyState(icon, title, text, actionHtml = '', size = 'md') {
+  const pad = size === 'sm' ? 'px-6 py-7' : 'px-6 py-11';
+  return `<div class="leaf ${pad} text-center">
+    <div class="mb-2.5 flex justify-center"><i data-lucide="${icon}" class="h-5 w-5 ink3"></i></div>
+    <p class="t-body ink2">${esc(title)}</p>
+    <p class="measure mx-auto mt-1.5 t-hint italic">${esc(text)}</p>
+    ${actionHtml ? `<div class="mt-4">${actionHtml}</div>` : ''}
+  </div>`;
+}
+
+/* cabeçalho de seção: título + fio que corre até a margem.
+   Substitui o rótulo-sobrancelha em caixa alta — o fio já diz "seção nova". */
+function sectionTitle(text, right = '') {
+  return `<div class="sec-head mb-2.5">
+    <h2 class="t-h2 ink">${esc(text)}</h2>
+    ${right}
+  </div>`;
+}
+
+/* cifra de ledger — rótulo, número, nota. Sem caixa, sem fundo, sem sombra. */
+function figure(label, value, hint = '', extra = '') {
+  return `<div class="${extra}">
+    <p class="t-field">${esc(label)}</p>
+    <p class="t-num mt-1 ink">${esc(value)}</p>
+    ${hint ? `<p class="mt-1 t-hint">${esc(hint)}</p>` : ''}
+  </div>`;
+}
+
+/* linha de atividade (usada em Hoje e Semana).
+   Era um card com fundo e sombra; agora é uma linha de caderno: fio de 2px da
+   matéria à esquerda, o tópico em tinta, as cifras alinhadas à direita.
+   Tirei o line-through: sobre serifada ele corta as descendentes e suja a
+   linha. Quem diz "concluída" é a palavra em itálico + a tinta mais baixa. */
+function activityRow(a, opts = {}) {
+  const t = topicById(a.topicId);
+  const s = subjectOf(a.subjectId);
+  const nome = esc(t ? t.name : 'Tópico removido');
+
+  /* Planejado e realizado são coisas diferentes desde que plannedMinutes existe.
+     O número principal da linha é o PLANO; quando a atividade já foi concluída e o
+     tempo real difere, o real aparece ao lado, discreto — é a comparação que dá
+     sentido ao registro, e é o que o rótulo "Planejado" promete. */
+  const realMin = a.done
+    ? S.sessions.filter(x => x.activityId === a.id).reduce((sum, x) => sum + x.minutes, 0)
+    : 0;
+  const sufixoReal = (a.done && realMin > 0 && realMin !== a.plannedMinutes)
+    ? ` <span class="ink3">· ${fmtMinutes(realMin)}</span>` : '';
+
+  const botaoConcluir = `<button type="button" data-act="complete" data-id="${a.id}"
+      title="${a.done ? 'Reabrir atividade' : 'Concluir e registrar sessão'}"
+      aria-label="${a.done ? 'Reabrir' : 'Concluir'} ${nome}"
+      class="grid ${opts.compact ? 'h-4 w-4' : 'mt-1 h-[18px] w-[18px]'} shrink-0 place-items-center rounded-[3px] border transition-colors"
+      style="border-color:${a.done ? 'var(--c-ok)' : 'var(--c-ink3)'}">
+      ${a.done ? `<i data-lucide="check" class="h-2.5 w-2.5" style="color:var(--c-ok)"></i>` : ''}
+    </button>`;
+
+  const acoes = `<span class="flex items-center gap-0.5 transition-opacity duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+      <button type="button" data-act="edit-activity" data-id="${a.id}" class="${BTN_ICON} is-sm" title="Editar tópico, duração, prioridade e dia" aria-label="Editar atividade"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></button>
+      <button type="button" data-act="del-activity" data-id="${a.id}" class="${BTN_ICON} is-sm is-danger" title="Remover" aria-label="Remover"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>
+    </span>`;
+
+  /* modo compacto: uma linha só, para o ledger da semana.
+     Aqui o tópico já está dentro do dia, então não repete matéria nem dia.
+     flex-wrap: quando a coluna do dia fica estreita (janelas pequenas, ou fonte
+     ampliada a 200%), o tempo e os botões descem para a segunda linha em vez de
+     empurrar a página para o lado. Em telas largas nada muda — só envolve se
+     precisar. */
+  if (opts.compact) {
+    return `<div class="group flex flex-wrap items-center gap-x-3 gap-y-0.5 py-1">
+      ${botaoConcluir}
+      ${subjectDot(s, 6)}
+      <span class="min-w-0 flex-1 truncate t-meta ${a.done ? 'ink3' : 'ink'}">${nome}</span>
+      <span class="shrink-0 t-hint num">${fmtMinutes(a.plannedMinutes)}${sufixoReal}</span>
+      ${acoes}
+    </div>`;
+  }
+
+  const meta = [
+    subjectName(a.subjectId),
+    priorityWord(a.priority),
+    opts.showDay ? (a.day === null ? 'sem dia fixo' : DAYS[a.day]) : '',
+    a.done ? `<span style="color:var(--c-ok)">concluída</span>` : '',
+  ].filter(Boolean).join('');
+
+  return `<div class="row rail group flex items-start gap-3.5 py-3 pl-4" style="--rail:${subjFill(s)}">
+    ${botaoConcluir}
+    <div class="min-w-0 flex-1">
+      <p class="t-body ${a.done ? 'ink3' : 'ink'}">${nome}</p>
+      <p class="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 t-hint">${meta}</p>
+    </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <span class="t-meta ink num">${fmtMinutes(a.plannedMinutes)}${sufixoReal}</span>
+      ${acoes}
+    </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   9. ABA 1 — HOJE
+   ------------------------------------------------------------------------- */
+function onboardingCard() {
+  /* A única numeração legítima desta interface: isto É uma sequência — três
+     passos, nesta ordem. Onde não há ordem, não entra número. */
+  const passos = [
+    { n: '1', t: 'Escolha seus tópicos', d: 'O banco já vem com o conteúdo do ITA. Marque o status conforme avança.', tab: 'conteudos', cta: 'Abrir Conteúdos' },
+    { n: '2', t: 'Planeje a semana', d: 'Crie atividades com duração, prioridade e dia. Ou deixe sem dia fixo e encaixe quando quiser.', tab: 'semana', cta: 'Abrir Semana' },
+    { n: '3', t: 'Registre o que estudou', d: 'Ao concluir, informe a duração real. Nada rola sozinho: o controle é seu.', tab: 'progresso', cta: 'Ver Progresso' },
+  ];
+  return `<section class="sec-top">
+    ${sectionTitle('Comece por aqui', `<span class="t-hint">leva dois minutos</span>`)}
+    <div class="mt-1">
+      ${passos.map(p => `
+        <div class="row rail flex items-start gap-4 py-3 pl-4" style="--rail:var(--c-rule)">
+          <span class="t-num shrink-0 ink3 num">${p.n}</span>
+          <div class="min-w-0 flex-1">
+            <p class="t-body ink">${esc(p.t)}</p>
+            <p class="measure mt-0.5 t-hint">${esc(p.d)}</p>
+          </div>
+          <button type="button" class="word shrink-0" data-act="tab" data-tab="${p.tab}">${esc(p.cta)}</button>
+        </div>`).join('')}
+    </div>
+  </section>`;
+}
+
+function viewHoje() {
+  const idx = todayIndex();
+  const acts = currentWeekActivities();
+  const todayOpen = acts.filter(a => a.day === idx && !a.done);
+  const todayDone = acts.filter(a => a.day === idx && a.done);
+  const noDay = acts.filter(a => a.day === null && !a.done);
+  const past = pastOpenActivities();
+
+  /* O REAL das atividades concluídas hoje vem das SESSÕES, não da atividade: a
+     atividade guarda o plano. É a única forma de o par "planejado · estudados"
+     significar duas coisas distintas. */
+  const idsHoje = new Set(todayDone.map(a => a.id));
+  const realHoje = S.sessions
+    .filter(s => s.activityId && idsHoje.has(s.activityId))
+    .reduce((sum, s) => sum + s.minutes, 0);
+
+  const wm = weekMinutes(), gm = goalMinutes();
+  const p = pct(wm, gm);
+  const pace = pacePct();
+  const bateu = p >= 100;
+  const primeiraVez = S.activities.length === 0 && S.sessions.length === 0;
+  const porPrioridade = (a, b) =>
+    (PRIORITY[b.priority].weight - PRIORITY[a.priority].weight) || (b.plannedMinutes - a.plannedMinutes);
+
+  /* aviso: faixa pautada, sem caixa colorida. O fio diz o tom; o texto explica
+     e a ação fica ao lado. Nada foi bloqueado — a frase diz isso. */
+  const carry = past.length ? `
+    <div class="rail mb-7 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-3 pl-4"
+         style="--rail:var(--c-warn)">
+      <div class="min-w-0">
+        <p class="t-body" style="color:var(--c-warn)">${past.length} ${past.length === 1 ? 'atividade ficou' : 'atividades ficaram'} em semanas anteriores</p>
+        <p class="measure mt-0.5 t-hint">Nada rolou automaticamente. Traga para esta semana como “sem dia fixo” ou deixe onde está.</p>
+      </div>
+      <button type="button" class="${BTN_GHOST} btn-sm shrink-0" data-act="carry-all">Trazer para esta semana</button>
+    </div>` : '';
+
+  return `
+    ${carry}
+    ${primeiraVez ? onboardingCard() : ''}
+
+    <section>
+      <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <div class="min-w-0">
+          <h1 class="t-h1 ink">${esc(longDate())}</h1>
+          <p class="mt-1 t-meta">${DAYS[idx]}${
+            todayOpen.length
+              ? `, ${todayOpen.length} ${todayOpen.length === 1 ? 'atividade planejada' : 'atividades planejadas'}`
+              : ', nada planejado'}</p>
+        </div>
+        <button type="button" class="${BTN_PRI}" data-act="unplanned">
+          <i data-lucide="plus" class="h-3.5 w-3.5"></i>Registrar estudo não planejado
+        </button>
+      </div>
+    </section>
+
+    <!-- O ÚNICO momento alto da página: a cifra da semana em 40px.
+         Tudo em volta fica em tinta baixa para que ela seja o que se vê. -->
+    <section class="sec">
+      ${sectionTitle('A semana', `<span class="t-hint">${shortDate(weekRange().start)} a ${shortDate(weekRange().end)}</span>`)}
+      <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-2 pt-2">
+        <p class="t-display ink num">${fmtMinutes(wm)} <span class="t-h1 ink3">de ${fmtMinutes(gm)}</span></p>
+        <p class="t-num num" style="color:${bateu ? 'var(--c-ok)' : 'var(--c-ink2)'}">${Math.round(p)}%</p>
+      </div>
+      <div class="mt-4">${progressBar(wm, gm, bateu ? 'var(--c-ok)' : 'var(--c-ink)', 6, pace)}</div>
+      <div class="mt-2.5 flex flex-wrap justify-between gap-x-6 gap-y-1 t-hint">
+        <span>${Math.round(pace)}% da semana já passou</span>
+        ${acts.length ? `<span>${todayDone.length + acts.filter(a => a.done && a.day !== idx).length} de ${acts.length} atividades concluídas</span>` : ''}
+      </div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Pendências de hoje', todayOpen.length ? `<span class="t-hint">${fmtMinutes(todayOpen.reduce((s, a) => s + a.plannedMinutes, 0))} estimados</span>` : '')}
+      <div class="mt-1">
+        ${todayOpen.length
+          ? todayOpen.sort(porPrioridade).map(a => activityRow(a)).join('')
+          : emptyState('sun', 'Nada planejado para hoje', 'Adiante um tópico sem dia fixo ou registre um estudo avulso.', '', 'sm')}
+      </div>
+    </section>
+
+    ${noDay.length ? `
+    <section class="sec">
+      ${sectionTitle('Sem dia fixo nesta semana', `<span class="t-hint">você escolhe quando encaixar</span>`)}
+      <div class="mt-1">${noDay.sort(porPrioridade).map(a => activityRow(a)).join('')}</div>
+    </section>` : ''}
+
+    ${todayDone.length ? `
+    <section class="sec">
+      ${sectionTitle('Concluídas hoje', `<span class="t-hint">${fmtMinutes(todayDone.reduce((s, a) => s + a.plannedMinutes, 0))} planejados${realHoje ? ` · ${fmtMinutes(realHoje)} estudados` : ''}</span>`)}
+      <div class="mt-1">${todayDone.map(a => activityRow(a)).join('')}</div>
+    </section>` : ''}
+
+    <section class="sec">
+      ${sectionTitle('Sessões registradas hoje')}
+      ${todaySessionsList()}
+    </section>`;
+}
+
+function todaySessionsList() {
+  const list = S.sessions.filter(s => s.date === todayIso());
+  if (!list.length) return emptyState('history', 'Nenhuma sessão registrada hoje', 'Ao concluir uma atividade ou registrar um estudo avulso, ele aparece aqui.', '', 'sm');
+  return `<div class="mt-1">
+    ${list.map(s => {
+      const sub = subjectOf(s.subjectId);
+      const t = s.topicId ? topicById(s.topicId) : null;
+      const linha = [TYPES[s.type] || 'Teoria', s.notes].filter(Boolean);
+      return `<div class="row rail group flex items-baseline gap-3.5 py-3 pl-4" style="--rail:${subjFill(sub)}">
+        <div class="min-w-0 flex-1">
+          <p class="t-body ink">${esc(t ? t.name : 'Estudo avulso')}</p>
+          <p class="mt-0.5 t-hint">${subjectDot(sub)} <span class="ml-2">${esc(sub.name)}</span>${
+            linha.length ? `<span class="ml-3 italic">${esc(linha.join(' — '))}</span>` : ''}</p>
+        </div>
+        <span class="shrink-0 t-meta ink num">${fmtMinutes(s.minutes)}</span>
+        <!-- A sessão que você acabou de registrar tem de ser corrigível AQUI. Antes
+             esta lista era só leitura e a mesma sessão só era editável na tabela do
+             Progresso — para consertar um número digitado errado havia que trocar de
+             aba. Os dois botões são os mesmos daquela tabela. -->
+        <span class="flex shrink-0 items-center gap-0.5 self-center transition-opacity duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+          <button type="button" data-act="edit-session" data-id="${s.id}" class="${BTN_ICON} is-sm" title="Editar" aria-label="Editar sessão"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></button>
+          <button type="button" data-act="del-session" data-id="${s.id}" class="${BTN_ICON} is-sm is-danger" title="Excluir" aria-label="Excluir sessão"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>
+        </span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   10. ABA 2 — SEMANA
+   ------------------------------------------------------------------------- */
+function viewSemana() {
+  const acts = currentWeekActivities();
+  const planned = acts.reduce((s, a) => s + a.plannedMinutes, 0);
+  const avail = availabilityMinutes();
+  const overload = avail > 0 && planned > avail;
+  const bySubject = plannedMinutesBySubject();
+  const suggested = suggestedMinutesBySubject();
+  const maxDist = Math.max(1, ...SUBJECTS.map(s => Math.max(bySubject[s.id], suggested[s.id])));
+
+  /* aviso de sobrecarga: faixa pautada. O fio diz o tom; a frase explica que
+     nada foi bloqueado — o produto não pune, então o aviso não pode gritar. */
+  const overloadBox = overload ? `
+    <div class="rail sec-top flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-3 pl-4"
+         style="--rail:var(--c-warn)">
+      <div class="min-w-0">
+        <p class="t-body" style="color:var(--c-warn)">${fmtMinutes(planned)} planejados para ${fmtMinutes(avail)} disponíveis</p>
+        <p class="measure mt-0.5 t-hint">Você passou ${fmtMinutes(planned - avail)} da sua disponibilidade. Nada foi bloqueado: revise prioridades, encurte durações ou mova itens para “sem dia fixo”.</p>
+      </div>
+    </div>` : '';
+
+  const semDia = acts.filter(a => a.day === null);
+
+  return `
+    ${overloadBox}
+
+    <section>
+      ${sectionTitle('Meta e planejamento', `<button type="button" class="${BTN_GHOST} btn-sm" data-act="new-activity"><i data-lucide="plus" class="h-3.5 w-3.5"></i>Nova atividade</button>`)}
+      <div class="flex flex-wrap items-start justify-between gap-x-8 gap-y-4 pt-2">
+        <label class="block">
+          <span class="mb-1.5 block t-field">Meta de horas da semana</span>
+          <input type="number" min="0" max="168" step="0.5" value="${S.settings.weeklyGoalHours}"
+                 data-act="set-goal" class="${INP} w-28" aria-label="Meta de horas da semana" />
+        </label>
+        <div class="text-right">
+          <p class="mb-1.5 t-field">Planejado nesta semana</p>
+          <p class="t-body ink num">${fmtMinutes(planned)}</p>
+        </div>
+      </div>
+      <div class="mt-4">${progressBar(planned, Math.max(avail, planned), overload ? 'var(--c-warn)' : 'var(--c-ink)', 6)}</div>
+      <p class="mt-2.5 t-hint">${acts.length} ${acts.length === 1 ? 'atividade' : 'atividades'}, ${acts.filter(a => a.done).length} concluída${acts.filter(a => a.done).length === 1 ? '' : 's'}. Disponibilidade configurada nos Ajustes: ${fmtMinutes(avail)}.</p>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Distribuição por matéria', `<span class="t-hint">planejado e sugerido pela prioridade</span>`)}
+      <div class="mt-1">
+        <!-- O cabeçalho NÃO quebrava linha. O filho flex-1, sem min-width:0, tem largura
+             mínima igual ao próprio texto ("Distribuição" = 247px a 200% de texto), e a
+             linha, sem flex-wrap, empurrava a PÁGINA 135px em 768-903px a 200% de texto —
+             e o rótulo "Sugerido" saía inteiro para fora da tela, deixando a 2ª linha de
+             valores sem coluna. As linhas de dados já quebravam (têm flex-wrap); só o
+             cabeçalho não. Com flex-wrap ele quebra igual, e a 100% nada muda (medido em
+             768, 900, 1080 e 1440: segue numa linha só). Não aparece no zoom real: 200% de
+             zoom numa janela de 768px equivale a 384px de viewport, abaixo do ponto md,
+             onde o cabeçalho está oculto — é o mesmo caso do texto ampliado sem zoom. -->
+        <div class="hidden flex-wrap items-baseline gap-4 py-1.5 md:flex">
+          <span class="w-36 shrink-0 t-col">Matéria</span>
+          <span class="flex-1 t-col">Distribuição</span>
+          <span class="w-16 shrink-0 text-right t-col">Planejado</span>
+          <span class="w-24 shrink-0 text-right t-col">Sugerido</span>
+        </div>
+        ${SUBJECTS.filter(s => isActiveSubject(s.id) || bySubject[s.id] > 0).map(s => {
+          const plannedM = bySubject[s.id] || 0, suggM = suggested[s.id] || 0;
+          const inativa = !isActiveSubject(s.id);
+          return `<div class="row flex flex-wrap items-center gap-4 py-2.5">
+            <span class="flex w-36 shrink-0 items-baseline gap-2">
+              ${subjectDot(s, 6)}
+              <span class="truncate t-body ${inativa ? 'ink3' : 'ink2'}">${esc(s.name)}</span>
+            </span>
+            <span class="min-w-0 flex-1">${progressBar(plannedM, maxDist, subjFill(s), 5)}</span>
+            <span class="w-16 shrink-0 text-right t-meta ink num">${fmtMinutes(plannedM)}</span>
+            <span class="hidden w-24 shrink-0 text-right t-hint md:block">${suggM ? fmtMinutes(suggM) : '—'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="mt-3 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
+        <p class="measure t-hint">A coluna sugerido vem da prioridade definida nos Ajustes, distribuindo a meta de ${fmtMinutes(goalMinutes())} entre as matérias ativas.</p>
+        <button type="button" class="${BTN_GHOST} btn-sm shrink-0" data-act="apply-suggestion"><i data-lucide="list-plus" class="h-3.5 w-3.5"></i>Criar atividades da sugestão</button>
+      </div>
+    </section>
+
+    <!-- O formulário "Nova atividade" que ficava AQUI saiu. Ele obrigava a rolar para
+         baixo para ver a semana e para cima para adicionar, e o dia escolhido no select
+         não tinha relação com a linha que você estava olhando. Agora a criação mora onde
+         a decisão acontece: um "+" em cada linha de dia, outro em "Sem dia fixo", e um
+         botão no cabeçalho de "Meta e planejamento" para descoberta. -->
+
+    <!-- A semana como ela é: sete linhas de um caderno, não sete cards iguais.
+         O dia de hoje não ganha etiqueta — ganha a tinta cheia e a palavra. -->
+    <section class="sec">
+      ${sectionTitle('Segunda a domingo', `<span class="t-hint">${fmtMinutes(planned)} na semana</span>`)}
+      <div class="mt-1">
+        ${DAYS.map((d, i) => {
+          const items = acts.filter(a => a.day === i).sort((a, b) => PRIORITY[b.priority].weight - PRIORITY[a.priority].weight);
+          const total = items.reduce((s, a) => s + a.plannedMinutes, 0);
+          const isToday = i === todayIndex();
+          return `<div class="row rail flex flex-wrap items-start gap-4 py-3 pl-4" style="--rail:${isToday ? 'var(--c-ink)' : 'var(--c-rule)'}">
+            <span class="w-24 shrink-0 t-body ${isToday ? 'ink' : 'ink2'}">${d}${isToday ? `<span class="ml-2 italic t-hint">hoje</span>` : ''}</span>
+            <!-- min-w em px, NÃO em rem: esta coluna é o "miolo" pautado do dia, e o
+                 miolo tem partes FIXAS (botão de concluir, ponto, tempo e os dois
+                 botões de ação). A 80px de mínimo o dia cabia com a coluna espremida
+                 a 88px e as partes fixas — 212px — transbordavam para fora da tela
+                 (medido: 40px em 320px). Em rem o mínimo incha junto com a fonte: a
+                 200% ele virava 480px e, numa janela de 320px, a própria coluna
+                 transbordava (232px, contra 167px antes). Em px o mínimo não incha;
+                 quem cede é a linha de baixo (ver flex-wrap em activityRow). -->
+            <div class="min-w-[250px] flex-1">
+              ${items.length
+                ? items.map(a => activityRow(a, { compact: true })).join('')
+                : `<p class="t-hint italic">Sem atividades</p>`}
+            </div>
+            <span class="flex shrink-0 items-center gap-1.5">
+              <span class="t-meta num ${items.length ? 'ink' : 'ink3'}">${items.length ? fmtMinutes(total) : '—'}</span>
+              <button type="button" data-act="new-activity" data-day="${i}" class="${BTN_ICON} is-sm"
+                title="Adicionar atividade em ${d}" aria-label="Adicionar atividade em ${d}"><i data-lucide="plus" class="h-3.5 w-3.5"></i></button>
+            </span>
+          </div>`;
+        }).join('')}
+      </div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Sem dia fixo', `<span class="flex shrink-0 items-center gap-3">${
+        semDia.length ? `<span class="t-hint">${semDia.length} ${semDia.length === 1 ? 'atividade' : 'atividades'}</span>` : ''
+      }<button type="button" data-act="new-activity" data-day="" class="${BTN_ICON} is-sm" title="Adicionar sem dia fixo" aria-label="Adicionar atividade sem dia fixo"><i data-lucide="plus" class="h-3.5 w-3.5"></i></button></span>`)}
+      <div class="mt-1">
+        ${semDia.length
+          ? semDia.map(a => activityRow(a)).join('')
+          : emptyState('calendar-x', 'Nenhuma atividade sem dia', 'Crie uma atividade deixando o dia em branco para montar um banco flexível.', '', 'sm')}
+      </div>
+    </section>`;
+}
+
+/* ---------------------------------------------------------------------------
+   11. ABA 3 — CONTEÚDOS
+   ------------------------------------------------------------------------- */
+function viewConteudos() {
+  /* Era uma grade de 6 cards idênticos, com a lista de tópicos espremida em
+     meia largura. Agora é um ÍNDICE: uma seção por matéria, largura inteira,
+     e o fio que fecha o cabeçalho de cada matéria é a própria barra de
+     progresso dela — o fio deixa de ser enfeite e passa a medir. */
+  return `
+    <p class="measure t-meta">Marque o status conforme avança. Arquivar esconde da lista ativa sem apagar o histórico.</p>
+
+    ${SUBJECTS.map(s => {
+      const all = S.topics.filter(t => t.subjectId === s.id);
+      const active = all.filter(t => !t.archived);
+      const archived = all.filter(t => t.archived);
+      const done = active.filter(t => t.status === 'concluido').length;
+      const inactive = !isActiveSubject(s.id);
+      const p = pct(done, Math.max(1, active.length));
+
+      return `<section class="sec">
+        <div class="flex items-center gap-3.5">
+          <h2 class="flex shrink-0 items-center gap-2.5 t-h2 ${inactive ? 'ink3' : 'ink'}">
+            ${subjectDot(s, 9)}<span>${esc(s.name)}</span>
+          </h2>
+          ${inactive ? `<span class="shrink-0 t-hint italic">inativa</span>` : ''}
+          <span class="hidden min-w-0 flex-1 sm:block" aria-hidden="true">
+            <span class="block w-full" style="height:2px;background:var(--c-rule)">
+              <span class="block" style="height:2px;width:${p}%;background:${subjFill(s)}"></span>
+            </span>
+          </span>
+          <span class="shrink-0 t-meta ink2 num" aria-label="${done} de ${active.length} tópicos concluídos">
+            <span aria-hidden="true">${done}<span class="ink3">/${active.length}</span></span>
+          </span>
+        </div>
+
+        <div class="mt-1">
+          ${active.length
+            ? active.map(t => topicRow(t)).join('')
+            : `<p class="py-4 t-hint italic">Nenhum tópico ativo nesta matéria.</p>`}
+        </div>
+
+        <form data-act="add-topic" data-subject="${s.id}" class="mt-3 flex gap-2">
+          <input name="name" required maxlength="80" placeholder="Novo tópico de ${esc(s.name)}"
+                 aria-label="Novo tópico de ${esc(s.name)}"
+                 class="inp flex-1" ${inactive ? 'disabled' : ''} />
+          <button type="submit" class="${BTN_GHOST} shrink-0 px-3" ${inactive ? 'disabled' : ''} title="Adicionar" aria-label="Adicionar tópico"><i data-lucide="plus" class="h-3.5 w-3.5"></i></button>
+        </form>
+
+        ${archived.length ? `
+        <button type="button" data-act="toggle-archived" data-subject="${s.id}"
+          class="word mt-3 inline-flex items-center gap-1.5">
+          <i data-lucide="${UI.showArchived[s.id] ? 'chevron-down' : 'chevron-right'}" class="h-3 w-3"></i>
+          ${UI.showArchived[s.id] ? 'Ocultar' : 'Mostrar'} ${archived.length} arquivado${archived.length === 1 ? '' : 's'}
+        </button>
+        <div class="mt-1">${UI.showArchived[s.id] ? archived.map(t => topicRow(t, true)).join('') : ''}</div>` : ''}
+      </section>`;
+    }).join('')}`;
+}
+
+/* linha de tópico: o status é um VALOR, então se lê como texto em itálico, não
+   como um select emoldurado. A cor diz o estado; o itálico diz que é editável. */
+function topicRow(t, archived = false) {
+  const st = t.status;
+  const cor = st === 'concluido' ? 'var(--c-ok)' : st === 'em_estudo' ? 'var(--c-ink)' : 'var(--c-ink3)';
+  return `<div class="row group flex min-w-0 flex-wrap items-center gap-3 py-2">
+    <span class="min-w-0 flex-1 truncate t-body ${archived ? 'ink3' : 'ink2'}">${esc(t.name)}</span>
+    <select data-act="set-status" data-id="${t.id}" aria-label="Status de ${esc(t.name)}"
+      class="inp-quiet shrink-0" style="color:${cor}">
+      ${Object.keys(STATUS).map(k => `<option value="${k}" ${st === k ? 'selected' : ''}>${STATUS[k].label}</option>`).join('')}
+    </select>
+    <div class="flex shrink-0 items-center gap-0.5 transition-opacity duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+      <button type="button" data-act="edit-topic" data-id="${t.id}" class="${BTN_ICON} is-sm" title="Editar nome" aria-label="Editar nome"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></button>
+      <button type="button" data-act="archive-topic" data-id="${t.id}" class="${BTN_ICON} is-sm" title="${archived ? 'Restaurar' : 'Arquivar'}" aria-label="${archived ? 'Restaurar' : 'Arquivar'}">
+        <i data-lucide="${archived ? 'rotate-ccw' : 'archive'}" class="h-3.5 w-3.5"></i>
+      </button>
+      <button type="button" data-act="del-topic" data-id="${t.id}" class="${BTN_ICON} is-sm is-danger" title="Excluir" aria-label="Excluir"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>
+    </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   12. ABA 4 — PROGRESSO
+   ------------------------------------------------------------------------- */
+function viewProgresso() {
+  const wSessions = weekSessions();
+  const wm = weekMinutes(), gm = goalMinutes();
+  const p = pct(wm, gm);
+  const pace = pacePct();
+
+  const pool = UI.progPeriod === 'semana' ? wSessions : S.sessions;
+  const totalPool = pool.reduce((s, x) => s + x.minutes, 0);
+
+  const bySubject = {};
+  SUBJECTS.forEach(s => { bySubject[s.id] = 0; });
+  pool.forEach(x => { bySubject[x.subjectId] = (bySubject[x.subjectId] || 0) + x.minutes; });
+  const distMax = Math.max(1, ...Object.values(bySubject));
+
+  /* últimos 7 dias */
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = addDaysIso(todayIso(), -i);
+    const m = S.sessions.filter(s => s.date === d).reduce((s, x) => s + x.minutes, 0);
+    days.push({ date: d, minutes: m });
+  }
+  const dayMax = Math.max(60, ...days.map(d => d.minutes));
+
+  const concluded = SUBJECTS.map(s => ({
+    s, n: S.topics.filter(t => t.subjectId === s.id && t.status === 'concluido' && !t.archived).length,
+    total: S.topics.filter(t => t.subjectId === s.id && !t.archived).length,
+  }));
+  const totalConcluidos = S.topics.filter(t => t.status === 'concluido' && !t.archived).length;
+  const totalAtivos = S.topics.filter(t => !t.archived).length;
+
+  const hist = [...S.sessions].sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+  const shown = hist.slice(0, UI.histLimit);
+  const totalTudo = S.sessions.reduce((s, x) => s + x.minutes, 0);
+
+  return `
+    <!-- Três cifras de ledger numa linha pautada. Sem caixa, sem sombra: o que
+         as separa é o espaço e o alinhamento à direita. -->
+    <section>
+      <div class="rule"></div>
+      <div class="grid grid-cols-1 gap-x-8 gap-y-5 py-4 sm:grid-cols-3">
+        ${figure('Horas nesta semana', fmtMinutes(wm), `meta de ${fmtMinutes(gm)}, faltam ${fmtMinutes(Math.max(0, gm - wm))}`)}
+        ${figure('Sessões registradas', String(S.sessions.length), `${wSessions.length} nesta semana, ${fmtMinutes(totalTudo)} no total`)}
+        ${figure('Tópicos concluídos', String(totalConcluidos), `de ${totalAtivos} tópicos ativos`)}
+      </div>
+      <div class="rule"></div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Meta da semana')}
+      <div class="mt-4">${progressBar(wm, gm, p >= 100 ? 'var(--c-ok)' : 'var(--c-ink)', 6, pace)}</div>
+      <div class="mt-4">
+        ${[
+          ['Meta', fmtMinutes(gm)],
+          ['Ritmo esperado até hoje', `${Math.round(pace)}%`],
+          ['Média diária nos últimos 7 dias', fmtMinutes(Math.round(days.reduce((s, d) => s + d.minutes, 0) / 7))],
+        ].map(([rotulo, valor]) => `
+          <div class="row flex items-baseline justify-between gap-6 py-2.5">
+            <span class="t-body ink2">${esc(rotulo)}</span>
+            <span class="shrink-0 t-body ink num">${esc(valor)}</span>
+          </div>`).join('')}
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-head mb-2.5">
+        <h2 class="t-h2 ink">Tempo por matéria</h2>
+        <span class="flex shrink-0 items-baseline gap-3">
+          ${['semana', 'total'].map(k => `<button type="button" class="word" data-act="prog-period" data-period="${k}"
+            aria-pressed="${UI.progPeriod === k}">${k === 'semana' ? 'esta semana' : 'total'}</button>`).join('')}
+        </span>
+      </div>
+      ${totalPool ? `
+      <div class="mt-1">
+        ${SUBJECTS.filter(s => bySubject[s.id] > 0).sort((a, b) => bySubject[b.id] - bySubject[a.id]).map(s => {
+          const m = bySubject[s.id], share = pct(m, totalPool);
+          return `<div class="row flex flex-wrap items-center gap-4 py-2.5">
+            <span class="flex w-24 shrink-0 items-baseline gap-2 sm:w-32">${subjectDot(s, 6)}<span class="truncate t-body ink2">${esc(s.name)}</span></span>
+            <span class="min-w-0 flex-1">${progressBar(m, distMax, subjFill(s), 5)}</span>
+            <span class="w-20 shrink-0 text-right t-meta ink num">${fmtMinutes(m)}</span>
+            <span class="w-12 shrink-0 text-right t-hint num">${Math.round(share)}%</span>
+          </div>`;
+        }).join('')}
+      </div>`
+      : emptyState('chart-column', 'Sem dados neste período', 'Registre uma sessão para ver a distribuição por matéria.', '', 'sm')}
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Últimos 7 dias')}
+      <!-- O gráfico tem largura mínima própria: 7 rótulos de dia mais os vãos pedem 374px
+           numa coluna de 320px a 200% de texto. Sem contenção, a barra de rolagem aparece
+           na PÁGINA inteira; aqui ela fica no próprio gráfico — conteúdo 2D, permitido — e
+           as barras e os rótulos rolam juntos, por serem filhos do mesmo bloco.
+           A troca de mt-5 por mt-3 + pt-2 sobe a borda de recorte 8px acima do gráfico: a
+           etiqueta da barra mais alta SOBRESSAI 4,5px do topo (é posicionada acima da
+           barra) e seria decepada. Com h-[8.5rem] a caixa de conteúdo segue com 8rem, na
+           mesma posição: 12+8 = 20px de margem, igual em qualquer escala de texto. -->
+      <div class="mt-3 flex h-[8.5rem] flex-col pt-2 scroll-x">
+        <div class="flex flex-1 items-end gap-2">
+          ${days.map(d => {
+            /* 82% de teto: sobra espaço para a etiqueta acima da barra mais alta.
+               A barra é ESTREITA de propósito — coluna larga vira bloco sólido e
+               passa a ser a coisa mais pesada da página; régua fina mede igual. */
+            const alt = d.minutes ? Math.max(3, (d.minutes / dayMax) * 82) : 0;
+            const hoje = d.date === todayIso();
+            return `<div class="relative flex h-full flex-1 items-end justify-center">
+              ${d.minutes ? `<span class="absolute inset-x-0 text-center t-hint num" style="bottom:calc(${alt}% + 5px)">${(d.minutes / 60).toFixed(1).replace('.0', '').replace('.', ',')}h</span>` : ''}
+              <div style="width:12px;height:${alt}%;min-height:${d.minutes ? 2 : 0}px;background:${d.minutes ? (hoje ? 'var(--c-ink)' : 'var(--c-ink3)') : 'transparent'}"></div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="rule mt-3"></div>
+        <div class="mt-2 flex gap-2">
+          ${days.map(d => `<span class="flex-1 text-center t-hint ${d.date === todayIso() ? 'ink' : ''}">${dayNameFromIso(d.date)}</span>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Tópicos concluídos por matéria')}
+      <div class="mt-1">
+        ${concluded.map(({ s, n, total }) => `
+          <div class="row flex flex-wrap items-center gap-4 py-2.5">
+            <span class="flex w-24 shrink-0 items-baseline gap-2 sm:w-32">${subjectDot(s, 6)}<span class="truncate t-body ink2">${esc(s.name)}</span></span>
+            <span class="min-w-0 flex-1">${progressBar(n, Math.max(1, total), subjFill(s), 5)}</span>
+            <span class="w-16 shrink-0 text-right t-meta ink num">${n}<span class="ink3">/${total}</span></span>
+          </div>`).join('')}
+      </div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Histórico de sessões', hist.length ? `<span class="t-hint">${hist.length} ${hist.length === 1 ? 'sessão' : 'sessões'}</span>` : '')}
+      ${hist.length ? `
+      <div class="scroll-x mt-1">
+        <table class="w-full min-w-[700px] text-left">
+          <thead>
+            <tr style="border-bottom:1px solid var(--c-rule)">
+              <th class="py-2 pr-4 t-col">Data</th>
+              <th class="py-2 pr-4 t-col">Matéria</th>
+              <th class="py-2 pr-4 t-col">Tópico</th>
+              <th class="py-2 pr-4 text-right t-col">Duração</th>
+              <th class="py-2 pr-4 t-col">Tipo</th>
+              <th class="py-2 pr-4 t-col">Observações</th>
+              <th class="py-2 text-right t-col">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${shown.map(s => {
+              const sub = subjectOf(s.subjectId);
+              const t = s.topicId ? topicById(s.topicId) : null;
+              return `<tr class="row group">
+                <td class="whitespace-nowrap py-2.5 pr-4 t-meta ink2">${shortDate(s.date)} <span class="t-hint">${dayNameFromIso(s.date)}</span></td>
+                <td class="whitespace-nowrap py-2.5 pr-4 t-meta">${subjectName(s.subjectId)}</td>
+                <td class="min-w-[12ch] max-w-[12.5rem] py-2.5 pr-4 t-body ink">${esc(t ? t.name : 'Estudo avulso')}</td>
+                <td class="whitespace-nowrap py-2.5 pr-4 text-right t-meta ink num">${fmtMinutes(s.minutes)}</td>
+                <td class="whitespace-nowrap py-2.5 pr-4 t-meta ink2 italic">${esc(TYPES[s.type] || 'Teoria')}</td>
+                <td class="min-w-[24ch] max-w-[15rem] py-2.5 pr-4 t-hint">${esc(s.notes || '—')}</td>
+                <td class="whitespace-nowrap py-2.5 text-right">
+                  <span class="inline-flex items-center gap-0.5 transition-opacity duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+                    <button type="button" data-act="edit-session" data-id="${s.id}" class="${BTN_ICON} is-sm inline-grid" title="Editar" aria-label="Editar sessão"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></button>
+                    <button type="button" data-act="del-session" data-id="${s.id}" class="${BTN_ICON} is-sm is-danger inline-grid" title="Excluir" aria-label="Excluir sessão"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></button>
+                  </span>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${hist.length > UI.histLimit ? `<div class="mt-4">
+        <button type="button" class="${BTN_GHOST} btn-sm" data-act="more-history">Carregar mais ${hist.length - UI.histLimit}</button>
+      </div>` : ''}`
+      : emptyState('history', 'Nenhuma sessão registrada', 'Conclua uma atividade no dia ou registre um estudo não planejado para começar o histórico.', '', 'sm')}
+    </section>`;
+}
+
+/* ---------------------------------------------------------------------------
+   13. ABA 5 — AJUSTES
+   ------------------------------------------------------------------------- */
+function viewAjustes() {
+  const temas = [
+    { id: 'escuro', label: 'escuro' },
+    { id: 'claro',  label: 'claro' },
+  ];
+  /* Ajustes como uma folha de configuração impressa: cada linha é um par
+     rótulo/valor separado por fio. Os pares de pílula (tema, prioridade)
+     viraram palavras em itálico com fio embaixo na ativa. */
+  return `
+    <section>
+      ${sectionTitle('Aparência')}
+      <div class="mt-1">
+        <div class="row flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-3">
+          <div class="min-w-0">
+            <p class="t-body ink">Tema da interface</p>
+            <p class="mt-0.5 t-hint">A escolha fica salva neste navegador.</p>
+          </div>
+          <span class="flex shrink-0 items-baseline gap-4">
+            ${temas.map(t => `<button type="button" class="word" data-act="set-theme" data-theme="${t.id}"
+              aria-pressed="${S.settings.theme === t.id}">${t.label}</button>`).join('')}
+          </span>
+        </div>
+
+        <div class="row flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-3">
+          <div class="min-w-0">
+            <p class="t-body ink">Horas disponíveis por semana</p>
+            <p class="measure mt-0.5 t-hint">Usado só para o aviso de sobrecarga no planejamento. Nada é bloqueado e nada é reagendado sozinho.</p>
+          </div>
+          <input type="number" min="1" max="168" step="0.5" value="${S.settings.weeklyAvailabilityHours}"
+                 data-act="set-avail" class="${INP} w-24 shrink-0 text-right"
+                 aria-label="Horas disponíveis por semana" />
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Prioridade e matérias ativas', `<span class="t-hint">define a sugestão de distribuição da meta</span>`)}
+      <div class="mt-1">
+        <div class="hidden items-baseline gap-4 py-1.5 sm:flex">
+          <span class="w-40 shrink-0 t-col">Matéria</span>
+          <span class="flex min-w-0 flex-1 items-baseline gap-4 sm:justify-end">
+            <span class="w-24 shrink-0 t-col">Prioridade</span>
+            <span class="w-10 shrink-0 text-center t-col">Ativa</span>
+          </span>
+        </div>
+        ${SUBJECTS.map(s => {
+          const inactive = !isActiveSubject(s.id);
+          return `<div class="row flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
+            <span class="flex w-full min-w-0 items-baseline gap-2 sm:w-40 sm:shrink-0">
+              ${subjectDot(s, 6)}
+              <span class="truncate t-body ${inactive ? 'ink3' : 'ink2'}">${esc(s.name)}</span>
+            </span>
+            <span class="flex min-w-0 flex-1 items-center gap-4 sm:justify-end">
+              <select data-act="set-prio" data-subject="${s.id}" aria-label="Prioridade de ${esc(s.name)}"
+                      class="inp-quiet w-24 shrink-0">
+                ${Object.keys(PRIORITY).map(k => `<option value="${k}" ${S.settings.priorities[s.id] === k ? 'selected' : ''}>${PRIORITY[k].label}</option>`).join('')}
+              </select>
+              <span class="flex w-10 shrink-0 justify-center">
+                <button type="button" class="sw" role="switch" aria-checked="${inactive ? 'false' : 'true'}"
+                  aria-label="Matéria ${esc(s.name)} ativa" data-act="toggle-subject" data-subject="${s.id}"></button>
+              </span>
+            </span>
+          </div>`;
+        }).join('')}
+      </div>
+      <p class="measure mt-3 t-hint">Desativar uma matéria só a remove dos formulários de criação. Atividades já planejadas, tópicos existentes e todo o histórico permanecem intactos.</p>
+    </section>
+
+    <section class="sec">
+      ${sectionTitle('Dados locais', `<span class="t-hint">tudo fica no seu navegador</span>`)}
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button type="button" class="${BTN_GHOST} btn-sm" data-act="export"><i data-lucide="download" class="h-3.5 w-3.5"></i>Exportar backup</button>
+        <button type="button" class="${BTN_GHOST} btn-sm" data-act="import"><i data-lucide="upload" class="h-3.5 w-3.5"></i>Importar backup</button>
+        <button type="button" class="${BTN_DANGER} btn-sm" data-act="reset"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i>Zerar aplicação</button>
+      </div>
+      <p class="measure mt-3 t-hint">Esta aplicação não usa IA, não faz conexões externas e não tem cronômetro: todo registro é manual, feito por você.</p>
+      <input type="file" id="import-file" data-act="import-file" accept="application/json" class="hidden" />
+    </section>`;
+}
+
+/* ---------------------------------------------------------------------------
+   14. MODAIS DE AÇÃO
+   ------------------------------------------------------------------------- */
+/* A data de uma sessão não pode estar no futuro. Uma sessão datada de 2030 não
+   entra em nenhuma visão semanal (nem no "Horas nesta semana", nem nos 7 dias) e
+   some do histórico — o usuário acha que registrou e o número não se move.
+   O `max` no input é só a dica do seletor nativo: os botões destes modais são
+   `type="button"` e chamam o handler direto, então NENHUMA validação do navegador
+   roda e o `max` sozinho não bloqueia nada. A checagem tem de estar aqui.
+   Devolve null quando a data é inválida ou futura. */
+function dataDeSessao(valor, padrao) {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(String(valor || '')) ? String(valor) : padrao;
+  return d > todayIso() ? null : d;
+}
+
+function completeModal(activityId) {
+  const a = S.activities.find(x => x.id === activityId);
+  if (!a) return;
+  const t = topicById(a.topicId);
+  const s = subjectOf(a.subjectId);
+  modal({
+    title: 'Registrar conclusão',
+    sub: [s.name, t ? t.name : null].filter(Boolean).join(', '),
+    body: `<form data-act="save-complete" data-id="${a.id}" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        ${field('Duração real (min)', `<input type="number" name="minutes" min="1" max="1440" value="${a.plannedMinutes}" required class="${INP}" />`, `Planejado: ${fmtMinutes(a.plannedMinutes)}`)}
+        ${field('Data', `<input type="date" name="date" value="${todayIso()}" max="${todayIso()}" required class="${INP}" />`)}
+      </div>
+      ${field('Tipo de estudo', `<select name="type" class="${INP}">${Object.keys(TYPES).map(k => `<option value="${k}">${TYPES[k]}</option>`).join('')}</select>`)}
+      ${field('Observações', `<textarea name="notes" rows="3" placeholder="Ex.: errei 3 de 20 — revisar equação de Torricelli" class="${INP} resize-none"></textarea>`)}
+      ${field('Status do tópico', `<select name="topicStatus" class="${INP}">
+        <option value="em_estudo" ${!t || t.status === 'nao_iniciado' || t.status === 'em_estudo' ? 'selected' : ''}>Em estudo</option>
+        <option value="concluido" ${t && t.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+        <option value="nao_iniciado">Não iniciado</option>
+      </select>`)}
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-complete"><i data-lucide="check" class="h-4 w-4"></i>Salvar sessão</button>`,
+  });
+}
+
+function unplannedModal() {
+  const activeSubs = SUBJECTS.filter(s => isActiveSubject(s.id));
+  modal({
+    title: 'Estudo não planejado',
+    sub: 'Registre uma sessão avulsa direto no histórico',
+    body: `<form data-act="save-unplanned" class="space-y-4">
+      <div class="grid gap-4 md:grid-cols-2">
+        ${field('Matéria', `<select name="subjectId" class="${INP}" data-act="subject-select">${activeSubs.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>`)}
+        ${field('Tópico (opcional)', `<select name="topicId" class="${INP}" id="unplanned-topics">${topicOptionsFor(activeSubs[0] ? activeSubs[0].id : null)}</select>`)}
+        ${field('Duração (min)', `<input type="number" name="minutes" min="1" max="1440" value="60" required class="${INP}" />`)}
+        ${field('Data', `<input type="date" name="date" value="${todayIso()}" max="${todayIso()}" required class="${INP}" />`)}
+      </div>
+      ${field('Tipo de estudo', `<select name="type" class="${INP}">${Object.keys(TYPES).map(k => `<option value="${k}">${TYPES[k]}</option>`).join('')}</select>`)}
+      ${field('Observações', `<textarea name="notes" rows="3" placeholder="O que você estudou, dificuldades, acertos..." class="${INP} resize-none"></textarea>`)}
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-unplanned"><i data-lucide="save" class="h-4 w-4"></i>Registrar</button>`,
+  });
+}
+function topicOptionsFor(subjectId) {
+  if (!subjectId) return '<option value="">—</option>';
+  return `<option value="">Sem tópico específico</option>` +
+    visibleTopics(subjectId).map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+}
+
+/* UM modal para criar e editar. Antes eram dois caminhos separados: um formulário
+   grande no meio da página (que só criava) e um modal chamado "Reagendar" que, sem
+   dizer no nome, também editava a duração — e nunca a prioridade, de modo que mudar
+   prioridade exigia excluir e recriar. Agora é o mesmo formulário nos dois sentidos,
+   com os quatro campos que definem uma atividade. `opts.day` pré-preenche o dia
+   quando o modal é aberto a partir da linha de um dia. */
+function activityModal(opts = {}) {
+  const a = opts.id ? S.activities.find(x => x.id === opts.id) : null;
+  const editando = !!a;
+  const visiveis = SUBJECTS.filter(s => isActiveSubject(s.id) || (a && a.subjectId === s.id));
+  const topicoAtual = a ? topicById(a.topicId) : null;
+
+  const topicOptions = visiveis.map(s => `
+    <optgroup label="${esc(s.name)}">
+      ${visibleTopics(s.id).map(t => `<option value="${t.id}"${a && a.topicId === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}
+    </optgroup>`).join('');
+
+  const dia  = a ? a.day : (opts.day === undefined ? null : opts.day);
+  const min  = a ? a.plannedMinutes : 60;
+  const prio = a ? a.priority : 'media';
+
+  modal({
+    title: editando ? 'Editar atividade' : 'Nova atividade',
+    sub: editando ? [subjectOf(a.subjectId).name, topicoAtual ? topicoAtual.name : null].filter(Boolean).join(', ') : '',
+    body: `<form data-act="save-activity"${editando ? ` data-id="${a.id}"` : ''} class="space-y-4">
+      ${field('Tópico', `<select name="topicId" required class="${INP}">${topicOptions || '<option value="">Cadastre um tópico primeiro</option>'}</select>`)}
+      <div class="grid grid-cols-2 gap-4">
+        ${field('Duração estimada (min)', `<input type="number" name="minutes" min="5" max="1440" step="5" value="${min}" required class="${INP}" />`)}
+        ${field('Prioridade', `<select name="priority" class="${INP}">
+          ${Object.keys(PRIORITY).map(k => `<option value="${k}"${prio === k ? ' selected' : ''}>${PRIORITY[k].label}</option>`).join('')}
+        </select>`)}
+      </div>
+      ${field('Dia (opcional)', `<select name="day" class="${INP}">
+        <option value=""${dia === null ? ' selected' : ''}>Sem dia fixo</option>
+        ${DAYS.map((d, i) => `<option value="${i}"${dia === i ? ' selected' : ''}>${d}</option>`).join('')}
+      </select>`, 'Deixe em branco para encaixar quando quiser. Atividades atrasadas nunca rolam sozinhas — a decisão é sempre sua.')}
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-activity">${editando ? 'Salvar' : 'Criar atividade'}</button>`,
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   APLICAR A SUGESTÃO
+   ---------------------------------------------------------------------------
+   A coluna "Sugerido" era só leitura: o usuário via 5h46m de Matemática e tinha
+   de criar as atividades à mão, uma por uma, para chegar lá. Aqui a sugestão
+   vira atividade — mas NADA acontece sozinho: abre-se uma prévia que mostra
+   exatamente o que será criado, com o tamanho do bloco ajustável, e só o clique
+   final cria. Tudo entra "sem dia fixo" (o encaixe nos dias continua sendo uma
+   decisão sua) e distribuído pelos tópicos da matéria em ordem, para o esqueleto
+   já ter variedade em vez de 6 blocos do mesmo tópico.
+   -------------------------------------------------------------------------- */
+function blocosDe(minutos, bloco) {
+  const n = Math.max(1, Math.ceil(minutos / bloco));
+  const out = [];
+  let resta = minutos;
+  for (let i = 0; i < n && resta > 0; i++) { const q = Math.min(bloco, resta); out.push(q); resta -= q; }
+  return out;
+}
+
+/* Desenha a prévia dentro do modal já aberto. É chamada ao abrir e a cada
+   mudança do tamanho do bloco, para a contagem nunca ficar velha. */
+function pintarSugestao(bloco) {
+  const alvo = $('#suggestion-preview');
+  if (!alvo) return;
+  const suggested = suggestedMinutesBySubject();
+  const ativos = SUBJECTS.filter(s => isActiveSubject(s.id) && suggested[s.id] > 0);
+  let total = 0;
+  const linhas = ativos.map(s => {
+    const m = suggested[s.id];
+    const n = blocosDe(m, bloco).length;
+    total += n;
+    return `<div class="row flex items-baseline justify-between gap-6 py-1.5">
+      <span class="flex min-w-0 items-baseline gap-2">${subjectDot(s, 6)}<span class="truncate t-body ink2">${esc(s.name)}</span></span>
+      <span class="shrink-0 t-meta ink num">${fmtMinutes(m)} <span class="t-hint">em ${n} ${n === 1 ? 'bloco' : 'blocos'}</span></span>
+    </div>`;
+  }).join('');
+  alvo.innerHTML = linhas || `<p class="t-hint italic">Nenhuma matéria ativa com sugestão.</p>`;
+  const resumo = $('#suggestion-total');
+  if (resumo) resumo.textContent = total
+    ? `${total} ${total === 1 ? 'atividade' : 'atividades'}, todas sem dia fixo. Os tópicos entram em ordem — você ajusta cada uma depois em Editar.`
+    : '';
+}
+
+function applySuggestionModal() {
+  modal({
+    title: 'Criar atividades da sugestão',
+    sub: `Distribui a meta de ${fmtMinutes(goalMinutes())} entre as matérias ativas`,
+    body: `<form data-act="save-suggestion" class="space-y-4">
+      ${field('Tamanho do bloco (min)', `<input type="number" name="block" min="15" max="240" step="15" value="60" class="${INP}" data-act="suggestion-block" />`,
+        'Cada matéria vira blocos deste tamanho. Nada é criado sem o seu clique.')}
+      <div id="suggestion-preview" class="space-y-0.5"></div>
+      <p id="suggestion-total" class="measure t-hint"></p>
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-suggestion">Criar atividades</button>`,
+  });
+  pintarSugestao(60);
+}
+
+function editSessionModal(id) {
+  const s = S.sessions.find(x => x.id === id);
+  if (!s) return;
+  modal({
+    title: 'Editar sessão',
+    sub: `${shortDate(s.date)}, ${subjectOf(s.subjectId).name}`,
+    body: `<form data-act="save-session" data-id="${s.id}" class="space-y-4">
+      <div class="grid gap-4 md:grid-cols-2">
+        ${field('Data', `<input type="date" name="date" value="${s.date}" max="${todayIso()}" required class="${INP}" />`)}
+        ${field('Duração (min)', `<input type="number" name="minutes" min="1" max="1440" value="${s.minutes}" required class="${INP}" />`)}
+      </div>
+      ${field('Tipo', `<select name="type" class="${INP}">${Object.keys(TYPES).map(k => `<option value="${k}" ${s.type === k ? 'selected' : ''}>${TYPES[k]}</option>`).join('')}</select>`)}
+      ${field('Observações', `<textarea name="notes" rows="3" class="${INP} resize-none">${esc(s.notes)}</textarea>`)}
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-session-edit">Salvar</button>`,
+  });
+}
+
+function editTopicModal(id) {
+  const t = topicById(id);
+  if (!t) return;
+  modal({
+    title: 'Editar tópico',
+    sub: subjectOf(t.subjectId).name,
+    body: `<form data-act="save-topic" data-id="${t.id}" class="space-y-4">
+      ${field('Nome', `<input name="name" value="${esc(t.name)}" maxlength="80" required class="${INP}" />`)}
+      ${field('Matéria', `<select name="subjectId" class="${INP}">${SUBJECTS.map(s => `<option value="${s.id}" ${s.id === t.subjectId ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>`)}
+    </form>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_PRI}" data-act="submit-topic-edit">Salvar</button>`,
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   IMPORTAR BACKUP
+   ---------------------------------------------------------------------------
+   Antes era uma linha: S = normalize(JSON.parse(texto)). `normalize` aceita
+   QUALQUER objeto e sempre devolve um estado válido — mesmo que vazio. Então
+   importar {"foo": 1} apagava tudo (56 tópicos, atividades e sessões iam a zero),
+   a interface dizia "Backup importado." e o console ficava limpo. Perda de dados
+   silenciosa, e sem desfazer.
+
+   Agora o arquivo precisa PROVAR que é um backup antes de qualquer coisa: tem de
+   ser um objeto com `topics` e `sessions` como listas — a assinatura que o próprio
+   Exportar produz, e que nem {"foo": 1} nem {} conseguem imitar. E a troca deixou
+   de ser automática: mostra o que veio dentro e oferece Mesclar ou Substituir, para
+   que a decisão de apagar o que já existe seja explícita. */
+function pareceBackup(o) {
+  return !!o && typeof o === 'object' && !Array.isArray(o)
+    && Array.isArray(o.topics) && Array.isArray(o.sessions);
+}
+
+let pendingImport = null;
+
+/* União por id: o que já está aqui vence (uma edição local não pode ser
+   sobrescrita por um arquivo antigo); do arquivo entra só o que não existe. */
+function mesclarBackup(base, entrada) {
+  const unir = (atuais, novos) => {
+    const vistos = new Set(atuais.map(x => x.id));
+    return [...atuais, ...novos.filter(x => !vistos.has(x.id))];
+  };
+  return normalize({
+    version: 2,
+    settings: base.settings,
+    topics: unir(base.topics, entrada.topics),
+    activities: unir(base.activities, entrada.activities),
+    sessions: unir(base.sessions, entrada.sessions),
+  });
+}
+
+function importModal(entrada) {
+  pendingImport = normalize(entrada);
+  const linhas = [
+    ['Tópicos', pendingImport.topics.length],
+    ['Atividades planejadas', pendingImport.activities.length],
+    ['Sessões registradas', pendingImport.sessions.length],
+  ].map(([rotulo, n]) => `<div class="row flex items-baseline justify-between gap-6 py-2">
+      <span class="t-body ink2">${esc(rotulo)}</span>
+      <span class="shrink-0 t-body ink num">${n}</span>
+    </div>`).join('');
+  modal({
+    title: 'Importar backup',
+    sub: 'Confira o que veio no arquivo antes de decidir',
+    body: `${linhas}
+      <p class="measure mt-4 t-hint">Mesclar mantém o que já está aqui e acrescenta o que só existe no arquivo. Substituir apaga tudo o que você tem hoje e deixa apenas o arquivo.</p>`,
+    footer: `<button type="button" class="${BTN_GHOST}" data-act="close-modal">Cancelar</button>
+             <button type="button" class="${BTN_GHOST}" data-act="import-merge">Mesclar</button>
+             <button type="button" class="${BTN_PRI}" data-act="import-replace">Substituir</button>`,
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   15. EVENTOS (delegação)
+   ------------------------------------------------------------------------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id;
+
+  if (act === 'modal-backdrop' && e.target === el) { closeModal(); return; }
+
+  switch (act) {
+    case 'tab':
+      UI.tab = el.dataset.tab;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render();
+      break;
+
+    case 'set-theme':
+      S.settings.theme = el.dataset.theme === 'claro' ? 'claro' : 'escuro';
+      save(); applyTheme(); render();
+      toast(S.settings.theme === 'claro' ? 'Tema claro ativo.' : 'Tema escuro ativo.');
+      break;
+
+    case 'close-modal':
+      closeModal();
+      break;
+
+    case 'confirm-yes': {
+      const fn = pendingConfirm; pendingConfirm = null;
+      closeModal();
+      if (typeof fn === 'function') fn();
+      break;
+    }
+
+    /* ---- Hoje / Semana ---- */
+    case 'complete': {
+      const a = S.activities.find(x => x.id === id);
+      if (!a) break;
+      if (a.done) {
+        confirmModal({
+          title: 'Reabrir atividade?',
+          text: 'Ela volta para as pendências. A sessão já registrada permanece no histórico — nada é apagado.',
+          confirmLabel: 'Reabrir', danger: false,
+          onConfirm: () => { a.done = false; a.doneAt = null; save(); render(); toast('Atividade reaberta.'); },
+        });
+      } else {
+        completeModal(id);
+      }
+      break;
+    }
+
+    case 'submit-complete': {
+      const form = $('form[data-act="save-complete"]');
+      if (!form) break;
+      const fd = new FormData(form);
+      const a = S.activities.find(x => x.id === form.dataset.id);
+      if (!a) break;
+      const minutes = clamp(Math.round(Number(fd.get('minutes')) || a.plannedMinutes), 1, 1440);
+      const date = dataDeSessao(fd.get('date'), todayIso());
+      if (!date) { toast('A data não pode estar no futuro.', 'error'); break; }
+      S.sessions.push({
+        id: uid(), date, subjectId: a.subjectId, topicId: a.topicId,
+        minutes, type: fd.get('type') || 'teoria',
+        notes: String(fd.get('notes') || '').trim(), activityId: a.id,
+      });
+      /* O PLANO NÃO É REESCRITO. Era aqui que o defeito nascia: a.minutes = minutes
+         fazia o "Planejado nesta semana" passar a somar o REALIZADO, então o plano
+         mudava sozinho ao concluir. O real fica na SESSÃO (acima), ligada por
+         activityId; o plano permanece exatamente o que você digitou. */
+      a.done = true; a.doneAt = Date.now();
+      const t = topicById(a.topicId);
+      if (t) t.status = fd.get('topicStatus') || t.status;
+      save(); closeModal(); render();
+      toast(`Sessão registrada: ${fmtMinutes(minutes)}`);
+      break;
+    }
+
+    case 'unplanned':
+      unplannedModal();
+      break;
+
+    case 'submit-unplanned': {
+      const form = $('form[data-act="save-unplanned"]');
+      if (!form) break;
+      const fd = new FormData(form);
+      const subjectId = fd.get('subjectId');
+      if (!subjectId) { toast('Selecione uma matéria.', 'error'); break; }
+      const minutes = clamp(Math.round(Number(fd.get('minutes')) || 0), 1, 1440);
+      const date = dataDeSessao(fd.get('date'), todayIso());
+      if (!date) { toast('A data não pode estar no futuro.', 'error'); break; }
+      S.sessions.push({
+        id: uid(), date, subjectId,
+        topicId: fd.get('topicId') || null, minutes,
+        type: fd.get('type') || 'teoria', notes: String(fd.get('notes') || '').trim(), activityId: null,
+      });
+      save(); closeModal(); render();
+      toast(`Estudo avulso registrado: ${fmtMinutes(minutes)}`);
+      break;
+    }
+
+    case 'new-activity':
+      activityModal({ day: el.dataset.day === undefined || el.dataset.day === '' ? null : clamp(Number(el.dataset.day), 0, 6) });
+      break;
+
+    case 'edit-activity':
+      activityModal({ id });
+      break;
+
+    case 'submit-activity': {
+      const form = $('form[data-act="save-activity"]');
+      if (!form) break;
+      const fd = new FormData(form);
+      const topicId = fd.get('topicId');
+      const topic = topicById(topicId);
+      if (!topic) { toast('Selecione um tópico válido.', 'error'); break; }
+      const day = fd.get('day') === '' ? null : clamp(Number(fd.get('day')), 0, 6);
+      const minutes = clamp(Math.round(Number(fd.get('minutes')) || 60), 5, 1440);
+      const priority = PRIORITY[fd.get('priority')] ? fd.get('priority') : 'media';
+
+      const alvo = form.dataset.id ? S.activities.find(x => x.id === form.dataset.id) : null;
+      if (alvo) {
+        /* Editar NÃO mexe no weekKey: a atividade continua na semana em que foi
+           planejada mesmo que você mude o dia dela. E o plano é gravado em
+           plannedMinutes — o realizado nunca é tocado por aqui. */
+        alvo.topicId = topicId; alvo.subjectId = topic.subjectId;
+        alvo.plannedMinutes = minutes; alvo.priority = priority; alvo.day = day;
+        save(); closeModal(); render();
+        toast('Atividade atualizada.');
+      } else {
+        S.activities.push({
+          id: uid(), topicId, subjectId: topic.subjectId,
+          plannedMinutes: minutes, priority, day,
+          weekKey: weekKeyOf(), done: false, doneAt: null,
+        });
+        save(); closeModal(); render();
+        toast(day === null ? 'Atividade criada sem dia fixo.' : `Atividade criada para ${DAYS[day]}.`);
+      }
+      break;
+    }
+
+    case 'apply-suggestion':
+      applySuggestionModal();
+      break;
+
+    case 'submit-suggestion': {
+      const formSug = $('form[data-act="save-suggestion"]');
+      const bloco = clamp(Math.round(Number(formSug && formSug.querySelector('input[name="block"]').value) || 60), 15, 240);
+      const suggested = suggestedMinutesBySubject();
+      const ativos = SUBJECTS.filter(s => isActiveSubject(s.id) && suggested[s.id] > 0);
+      if (!ativos.length) { toast('Nenhuma matéria ativa com sugestão.', 'error'); break; }
+
+      let criadas = 0;
+      ativos.forEach(s => {
+        const topicos = visibleTopics(s.id);
+        if (!topicos.length) return;
+        blocosDe(suggested[s.id], bloco).forEach((q, i) => {
+          S.activities.push({
+            id: uid(), topicId: topicos[i % topicos.length].id, subjectId: s.id,
+            plannedMinutes: q, priority: S.settings.priorities[s.id] || 'media',
+            day: null, weekKey: weekKeyOf(), done: false, doneAt: null,
+          });
+          criadas++;
+        });
+      });
+      save(); closeModal(); render();
+      toast(criadas === 1 ? '1 atividade criada sem dia fixo.' : `${criadas} atividades criadas sem dia fixo.`);
+      break;
+    }
+
+    case 'del-activity': {
+      const a = S.activities.find(x => x.id === id);
+      if (!a) break;
+      confirmModal({
+        title: 'Remover atividade?',
+        text: 'A atividade sai do planejamento. Sessões já registradas no histórico não são afetadas.',
+        confirmLabel: 'Remover',
+        onConfirm: () => {
+          S.activities = S.activities.filter(x => x.id !== id);
+          save(); render(); toast('Atividade removida.');
+        },
+      });
+      break;
+    }
+
+    case 'carry-all':
+      confirmModal({
+        title: 'Trazer atividades antigas?',
+        text: 'As atividades não concluídas de semanas anteriores entram nesta semana como "Sem dia fixo". Você poderá reagendá-las depois.',
+        confirmLabel: 'Trazer',
+        danger: false,
+        onConfirm: () => {
+          pastOpenActivities().forEach(a => { a.weekKey = weekKeyOf(); a.day = null; });
+          save(); render(); toast('Atividades trazidas para esta semana.');
+        },
+      });
+      break;
+
+    /* ---- Conteúdos ---- */
+    case 'toggle-archived': {
+      const sub = el.dataset.subject;
+      UI.showArchived[sub] = !UI.showArchived[sub];
+      render();
+      break;
+    }
+
+    case 'archive-topic': {
+      const t = topicById(id);
+      if (!t) break;
+      t.archived = !t.archived;
+      save(); render();
+      toast(t.archived ? 'Tópico arquivado (histórico preservado).' : 'Tópico restaurado.');
+      break;
+    }
+
+    case 'del-topic': {
+      const t = topicById(id);
+      if (!t) break;
+      confirmModal({
+        title: 'Excluir tópico?',
+        text: `Isso remove "${t.name}" e suas atividades planejadas. O histórico de sessões é preservado, mas o vínculo com o tópico será perdido. Para apenas esconder, use Arquivar.`,
+        confirmLabel: 'Excluir',
+        onConfirm: () => {
+          S.topics = S.topics.filter(x => x.id !== id);
+          S.activities = S.activities.filter(a => a.topicId !== id);
+          S.sessions.forEach(s => { if (s.topicId === id) s.topicId = null; });
+          save(); render(); toast('Tópico excluído.');
+        },
+      });
+      break;
+    }
+
+    case 'edit-topic':
+      editTopicModal(id);
+      break;
+
+    case 'submit-topic-edit': {
+      const form = $('form[data-act="save-topic"]');
+      if (!form) break;
+      const fd = new FormData(form);
+      const t = topicById(form.dataset.id);
+      if (!t) break;
+      const name = String(fd.get('name') || '').trim();
+      const subjectId = fd.get('subjectId');
+      if (!name) { toast('O nome não pode ficar vazio.', 'error'); break; }
+      t.name = name;
+      if (SUBJECT_MAP[subjectId] && subjectId !== t.subjectId) {
+        t.subjectId = subjectId;
+        S.activities.forEach(a => { if (a.topicId === t.id) a.subjectId = subjectId; });
+      }
+      save(); closeModal(); render(); toast('Tópico atualizado.');
+      break;
+    }
+
+    /* ---- Progresso ---- */
+    case 'prog-period':
+      UI.progPeriod = el.dataset.period;
+      render();
+      break;
+
+    case 'more-history':
+      UI.histLimit += 30;
+      render();
+      break;
+
+    case 'edit-session':
+      editSessionModal(id);
+      break;
+
+    case 'submit-session-edit': {
+      const form = $('form[data-act="save-session"]');
+      if (!form) break;
+      const fd = new FormData(form);
+      const s = S.sessions.find(x => x.id === form.dataset.id);
+      if (!s) break;
+      const date = dataDeSessao(fd.get('date'), s.date);
+      if (!date) { toast('A data não pode estar no futuro.', 'error'); break; }
+      s.date = date;
+      s.minutes = clamp(Math.round(Number(fd.get('minutes')) || s.minutes), 1, 1440);
+      s.type = TYPES[fd.get('type')] ? fd.get('type') : s.type;
+      s.notes = String(fd.get('notes') || '').trim();
+      save(); closeModal(); render(); toast('Sessão atualizada.');
+      break;
+    }
+
+    case 'del-session': {
+      const s = S.sessions.find(x => x.id === id);
+      if (!s) break;
+      confirmModal({
+        title: 'Excluir sessão?',
+        text: `Remove o registro de ${fmtMinutes(s.minutes)} de ${shortDate(s.date)}. Esta ação não pode ser desfeita.`,
+        confirmLabel: 'Excluir',
+        onConfirm: () => {
+          S.sessions = S.sessions.filter(x => x.id !== id);
+          save(); render(); toast('Sessão excluída.');
+        },
+      });
+      break;
+    }
+
+    /* ---- Ajustes ---- */
+    case 'toggle-subject': {
+      const sub = el.dataset.subject;
+      const list = S.settings.activeSubjects;
+      if (list.includes(sub)) {
+        if (list.length <= 1) { toast('Mantenha ao menos uma matéria ativa.', 'error'); break; }
+        S.settings.activeSubjects = list.filter(x => x !== sub);
+      } else {
+        S.settings.activeSubjects = [...list, sub];
+      }
+      save(); render();
+      break;
+    }
+
+    case 'export': {
+      try {
+        const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `rotina-ita-${todayIso()}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast('Backup exportado.');
+      } catch (err) { toast('Não foi possível exportar.', 'error'); }
+      break;
+    }
+
+    case 'import': {
+      const input = $('#import-file');
+      if (input) input.click();
+      break;
+    }
+
+    case 'import-merge': {
+      if (!pendingImport) { toast('Nada para importar.', 'error'); break; }
+      const n = mesclarBackup(S, pendingImport);
+      const ganho = {
+        t: n.topics.length - S.topics.length,
+        a: n.activities.length - S.activities.length,
+        s: n.sessions.length - S.sessions.length,
+      };
+      S = n; pendingImport = null;
+      save(); closeModal(); applyTheme(); UI.tab = 'hoje'; render();
+      toast(ganho.t + ganho.a + ganho.s === 0
+        ? 'Nada novo no arquivo — tudo o que veio já estava aqui.'
+        : `Backup mesclado: +${ganho.t} tópicos, +${ganho.a} atividades, +${ganho.s} sessões.`);
+      break;
+    }
+
+    case 'import-replace': {
+      if (!pendingImport) { toast('Nada para importar.', 'error'); break; }
+      S = pendingImport; pendingImport = null;
+      save(); closeModal(); applyTheme(); UI.tab = 'hoje'; render();
+      toast('Backup substituído.');
+      break;
+    }
+
+    case 'reset':
+      confirmModal({
+        title: 'Zerar aplicação?',
+        text: 'Todos os tópicos, atividades, sessões, metas e prioridades serão apagados, e o banco de tópicos voltará ao padrão. O tema escolhido é mantido. Esta ação não pode ser desfeita.',
+        confirmLabel: 'Zerar tudo',
+        onConfirm: () => {
+          const tema = S.settings.theme;
+          S = defaultState();
+          S.settings.theme = tema;
+          save(); applyTheme(); UI.tab = 'hoje'; render(); toast('Aplicação reiniciada.');
+        },
+      });
+      break;
+  }
+});
+
+/* O evento `input` (a cada tecla) só serve para UMA coisa aqui: manter a prévia da
+   sugestão verdadeira enquanto você digita o tamanho do bloco. Só `change` estava
+   ligado, então a contagem ("26 atividades") ficava velha até o campo perder o
+   foco — e a prévia é justamente o que você confere antes de autorizar a criação.
+   O escopo é estreito de propósito: um `input` que chamasse `render()` (como fazem
+   os handlers de `change`) arrancaria o foco do campo a cada tecla digitada. Aqui
+   só se redesenha o miolo da prévia, nunca o campo. */
+document.addEventListener('input', e => {
+  const el = e.target.closest('[data-act="suggestion-block"]');
+  if (!el) return;
+  pintarSugestao(clamp(Math.round(Number(el.value) || 60), 15, 240));
+});
+
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+
+  if (act === 'set-status') {
+    const t = topicById(el.dataset.id);
+    if (t && STATUS[el.value]) { t.status = el.value; save(); render(); }
+    return;
+  }
+  if (act === 'set-prio') {
+    if (PRIORITY[el.value]) { S.settings.priorities[el.dataset.subject] = el.value; save(); render(); }
+    return;
+  }
+  if (act === 'set-goal') {
+    S.settings.weeklyGoalHours = clamp(Number(el.value) || 0, 0, 168);
+    save(); render();
+    return;
+  }
+  if (act === 'set-avail') {
+    S.settings.weeklyAvailabilityHours = clamp(Number(el.value) || 0, 1, 168);
+    save(); render();
+    return;
+  }
+  if (act === 'subject-select') {
+    const sel = $('#unplanned-topics');
+    if (sel) { sel.innerHTML = topicOptionsFor(el.value); paint(); }
+    return;
+  }
+  if (act === 'suggestion-block') {
+    pintarSugestao(clamp(Math.round(Number(el.value) || 60), 15, 240));
+    return;
+  }
+  if (act === 'import-file' && el.files && el.files[0]) {
+    const file = el.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      let entrada = null;
+      try { entrada = JSON.parse(String(reader.result)); }
+      catch (err) { toast('O arquivo não é um JSON válido.', 'error'); return; }
+      /* Nada é trocado antes desta checagem — é ela que impede a perda silenciosa. */
+      if (!pareceBackup(entrada)) {
+        toast('Este arquivo não é um backup da Rotina ITA. Nada foi alterado.', 'error');
+        return;
+      }
+      importModal(entrada);
+    };
+    reader.readAsText(file);
+    el.value = '';
+    return;
+  }
+});
+
+document.addEventListener('submit', e => {
+  const form = e.target.closest('form[data-act]');
+  if (!form) return;
+  e.preventDefault();
+
+  if (form.dataset.act === 'add-topic') {
+    const input = form.querySelector('input[name="name"]');
+    const name = String(input.value || '').trim();
+    if (!name) return;
+    S.topics.push({ id: uid(), subjectId: form.dataset.subject, name, status: 'nao_iniciado', archived: false, createdAt: Date.now() });
+    save(); render(); toast('Tópico criado.');
+    const again = $(`form[data-act="add-topic"][data-subject="${form.dataset.subject}"] input[name="name"]`);
+    if (again) again.focus();
+    return;
+  }
+
+  /* O handler do formulário "add-activity" saiu junto com o formulário: criar
+     atividade agora passa pelo modal único (case 'submit-activity'). */
+});
+
+document.addEventListener('keydown', e => {
+  const raiz = $('#modal-root');
+  if (raiz.classList.contains('hidden')) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+
+  /* Prende o Tab dentro do diálogo. `aria-modal` só diz ao leitor de tela para tratar
+     o fundo como inerte; ele NÃO impede o foco de sair. Sem esta guarda, o usuário de
+     teclado tabula para fora do diálogo e alcança os controles da página encoberta —
+     e pode acioná-los. */
+  if (e.key !== 'Tab') return;
+  const focaveis = [...raiz.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(el => el.getClientRects().length > 0);
+  if (!focaveis.length) { e.preventDefault(); return; }
+
+  const primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+  const ativo = document.activeElement;
+  const dentro = raiz.contains(ativo);
+  if (e.shiftKey) {
+    if (!dentro || ativo === primeiro) { e.preventDefault(); ultimo.focus(); }
+  } else if (!dentro || ativo === ultimo) {
+    e.preventDefault(); primeiro.focus();
+  }
+});
+
+/* ---------------------------------------------------------------------------
+   16. BOOT
+   ------------------------------------------------------------------------- */
+applyTheme();
+save();   /* grava o estado (inclusive o seed inicial) para IDs estáveis */
+render();
+</script>
+</body>
+</html>
